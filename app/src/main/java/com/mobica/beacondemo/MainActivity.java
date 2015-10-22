@@ -3,11 +3,13 @@ package com.mobica.beacondemo;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
@@ -30,6 +32,7 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.iid.InstanceID;
 import com.google.gson.Gson;
+import com.mobica.beacondemo.gcm.GcmPreferences;
 import com.mobica.beacondemo.gcm.RegistrationIntentService;
 import com.mobica.beacondemo.gcm.TokenStore;
 import com.mobica.beacondemo.model.MacRegisterRequest;
@@ -84,8 +87,8 @@ public class MainActivity extends AppCompatActivity
 
         if (checkPlayServices()) {
             // Start IntentService to register this application with GCM.
-//            Intent intent = new Intent(this, RegistrationIntentService.class);
-//            startService(intent);
+            Intent intent = new Intent(this, RegistrationIntentService.class);
+            startService(intent);
             Log.d(TAG, "MAC: " + getWifiMacAddress());
         }
     }
@@ -146,6 +149,19 @@ public class MainActivity extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mRegistrationBroadcastReceiver);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        LocalBroadcastManager.getInstance(this).registerReceiver(mRegistrationBroadcastReceiver,
+                new IntentFilter(GcmPreferences.WS_MESSAGE));
     }
 
     /**
