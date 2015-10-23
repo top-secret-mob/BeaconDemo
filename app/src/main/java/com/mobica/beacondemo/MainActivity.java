@@ -4,49 +4,29 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.net.wifi.WifiInfo;
-import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.LocalBroadcastManager;
-import android.util.Log;
-import android.view.View;
-import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.Toast;
+import android.view.View;
 
-import com.android.volley.Request;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.StringRequest;
-import com.android.volley.toolbox.Volley;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
-import com.google.android.gms.iid.InstanceID;
-import com.google.gson.Gson;
 import com.mobica.beacondemo.gcm.GcmPreferences;
 import com.mobica.beacondemo.gcm.RegistrationIntentService;
-import com.mobica.beacondemo.gcm.TokenStore;
-import com.mobica.beacondemo.model.MacRegisterRequest;
-import com.mobica.beacondemo.model.MacRegisterResponse;
-import com.mobica.beacondemo.volley.GsonRequest;
 
-import org.json.JSONObject;
-
-import java.io.IOException;
 import java.net.NetworkInterface;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -72,7 +52,9 @@ public class MainActivity extends AppCompatActivity
         mRegistrationBroadcastReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                Snackbar.make(fab, "BROADCAST " + intent.getAction(), Snackbar.LENGTH_LONG).show();
+                Snackbar.make(fab, "BT enable: " +
+                        intent.getBooleanExtra(GcmPreferences.EXTRA_BT_STATE, false),
+                        Snackbar.LENGTH_LONG).show();
             }
         };
 
@@ -186,7 +168,6 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-
     public static String getWifiMacAddress() {
         try {
             String interfaceName = "wlan0";
@@ -197,7 +178,7 @@ public class MainActivity extends AppCompatActivity
 //                }
 
                 byte[] mac = intf.getHardwareAddress();
-                if (mac==null){
+                if (mac == null) {
                     continue;
                 }
 
@@ -205,13 +186,14 @@ public class MainActivity extends AppCompatActivity
                 for (byte aMac : mac) {
                     buf.append(String.format("%02X:", aMac));
                 }
-                if (buf.length()>0) {
+                if (buf.length() > 0) {
                     buf.deleteCharAt(buf.length() - 1);
                 }
                 //return buf.toString();
                 Log.d(TAG, intf.getName() + " " + buf.toString());
             }
-        } catch (Exception ex) { } // for now eat exceptions
+        } catch (Exception ex) {
+        } // for now eat exceptions
         return "";
     }
 }

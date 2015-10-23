@@ -9,4 +9,6 @@ public class GcmPreferences {
     public static final String WS_SUBSCRIPTION_SUCCESS = "wsSubscriptionSucceeded";
     public static final String WS_SUBSCRIPTION_FAILED = "wsSubscriptionFailed";
     public static final String WS_MESSAGE = "wsMessage";
+
+    public static final String EXTRA_BT_STATE = "EXTRA_BT_STATE";
 }
