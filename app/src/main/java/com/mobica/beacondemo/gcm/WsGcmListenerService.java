@@ -14,6 +14,7 @@ import android.util.Log;
 import com.google.android.gms.gcm.GcmListenerService;
 import com.mobica.beacondemo.MainActivity;
 import com.mobica.beacondemo.R;
+import com.mobica.beacondemo.ble.BleAdapter;
 
 public class WsGcmListenerService extends GcmListenerService {
     private static final String TAG = WsGcmListenerService.class.getSimpleName();
@@ -33,9 +34,15 @@ public class WsGcmListenerService extends GcmListenerService {
         intent.putExtra(GcmPreferences.EXTRA_BT_STATE, enabled);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
 
-        // show notification only when status changes or when when registered already in store
+        // show notification only when status changes or if registered when user was already in store
         if (statusChanged || enabled) {
             sendNotification(enabled);
+
+            if (enabled) {
+                BleAdapter.enableBle(this);
+            } else {
+                BleAdapter.disableBle(this);
+            }
         }
     }
 

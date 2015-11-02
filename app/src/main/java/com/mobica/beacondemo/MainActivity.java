@@ -24,10 +24,6 @@ import com.google.android.gms.common.GoogleApiAvailability;
 import com.mobica.beacondemo.gcm.GcmPreferences;
 import com.mobica.beacondemo.gcm.RegistrationIntentService;
 
-import java.net.NetworkInterface;
-import java.util.Collections;
-import java.util.List;
-
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -53,7 +49,7 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onReceive(Context context, Intent intent) {
                 Snackbar.make(fab, "BT enable: " +
-                        intent.getBooleanExtra(GcmPreferences.EXTRA_BT_STATE, false),
+                                intent.getBooleanExtra(GcmPreferences.EXTRA_BT_STATE, false),
                         Snackbar.LENGTH_LONG).show();
             }
         };
@@ -68,10 +64,9 @@ public class MainActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
 
         if (checkPlayServices()) {
-            // Start IntentService to register this application with GCM.
-            Intent intent = new Intent(this, RegistrationIntentService.class);
-            startService(intent);
-            Log.d(TAG, "MAC: " + getWifiMacAddress());
+//            // Start IntentService to register this application with GCM.
+//            Intent intent = new Intent(this, RegistrationIntentService.class);
+//            startService(intent);
         }
     }
 
@@ -168,32 +163,4 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-    public static String getWifiMacAddress() {
-        try {
-            String interfaceName = "wlan0";
-            List<NetworkInterface> interfaces = Collections.list(NetworkInterface.getNetworkInterfaces());
-            for (NetworkInterface intf : interfaces) {
-//                if (!intf.getName().equalsIgnoreCase(interfaceName)){
-//                    continue;
-//                }
-
-                byte[] mac = intf.getHardwareAddress();
-                if (mac == null) {
-                    continue;
-                }
-
-                StringBuilder buf = new StringBuilder();
-                for (byte aMac : mac) {
-                    buf.append(String.format("%02X:", aMac));
-                }
-                if (buf.length() > 0) {
-                    buf.deleteCharAt(buf.length() - 1);
-                }
-                //return buf.toString();
-                Log.d(TAG, intf.getName() + " " + buf.toString());
-            }
-        } catch (Exception ex) {
-        } // for now eat exceptions
-        return "";
-    }
 }

@@ -14,7 +14,7 @@ public class InstanceIdListenerService extends InstanceIDListenerService {
     @Override
     public void onTokenRefresh() {
         super.onTokenRefresh();
-        Log.d(TAG, "TOKEN REFRESH");
+        Log.d(TAG, "Gcm token refreshed");
         startService(new Intent(this, RegistrationIntentService.class));
     }
 }
