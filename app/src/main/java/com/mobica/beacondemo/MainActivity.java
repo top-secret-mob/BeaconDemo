@@ -1,9 +1,11 @@
 package com.mobica.beacondemo;
 
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.IntentSender;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
@@ -15,21 +17,34 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.Geofence;
+import com.google.android.gms.location.LocationServices;
 import com.mobica.beacondemo.gcm.GcmPreferences;
-import com.mobica.beacondemo.gcm.RegistrationIntentService;
+import com.mobica.beacondemo.geofence.GeofenceTransitionsIntentService;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+        implements NavigationView.OnNavigationItemSelectedListener, GoogleApiClient.OnConnectionFailedListener,
+        GoogleApiClient.ConnectionCallbacks {
     private static final String TAG = MainActivity.class.getSimpleName();
+    // Request code to attempt to resolve Google Play services connection failures.
+    public final static int CONNECTION_FAILURE_RESOLUTION_REQUEST = 9000;
 
     private FloatingActionButton fab;
     private BroadcastReceiver mRegistrationBroadcastReceiver;
+    // Stores the PendingIntent used to request geofence monitoring.
+    private PendingIntent mGeofenceRequestIntent;
+    private GoogleApiClient mApiClient;
+    private List<Geofence> mGeofenceList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,6 +83,14 @@ public class MainActivity extends AppCompatActivity
 //            Intent intent = new Intent(this, RegistrationIntentService.class);
 //            startService(intent);
         }
+
+        mApiClient = new GoogleApiClient.Builder(this)
+                .addApi(LocationServices.API)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .build();
+        prepareGeoFences();
+        mApiClient.connect();
     }
 
     @Override
@@ -80,51 +103,9 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
-
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
-        // Handle navigation view item clicks here.
-        int id = item.getItemId();
-
-        if (id == R.id.nav_camara) {
-            // Handle the camera action
-        } else if (id == R.id.nav_gallery) {
-
-        } else if (id == R.id.nav_slideshow) {
-
-        } else if (id == R.id.nav_manage) {
-
-        } else if (id == R.id.nav_share) {
-
-        } else if (id == R.id.nav_send) {
-
-        }
-
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        drawer.closeDrawer(GravityCompat.START);
         return true;
     }
 
@@ -162,5 +143,52 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
+    private void prepareGeoFences() {
+        this.mGeofenceList = new ArrayList<>();
+        final Geofence kfcFence = new Geofence.Builder()
+                .setRequestId("1")
+                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER | Geofence.GEOFENCE_TRANSITION_EXIT)
+                .setCircularRegion(53.431702, 14.555048, 100)
+                .setExpirationDuration(Geofence.NEVER_EXPIRE)
+                .build();
+        mGeofenceList.add(kfcFence);
+    }
 
+    private PendingIntent getGeofenceTransitionPendingIntent() {
+        Intent intent = new Intent(this, GeofenceTransitionsIntentService.class);
+        return PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+    }
+
+    @Override
+    public void onConnectionFailed(ConnectionResult connectionResult) {
+        // If the error has a resolution, start a Google Play services activity to resolve it.
+        if (connectionResult.hasResolution()) {
+            try {
+                connectionResult.startResolutionForResult(this,
+                        CONNECTION_FAILURE_RESOLUTION_REQUEST);
+            } catch (IntentSender.SendIntentException e) {
+                Log.e(TAG, "Exception while resolving connection error.", e);
+            }
+        } else {
+            int errorCode = connectionResult.getErrorCode();
+            Log.e(TAG, "Connection to Google Play services failed with error code " + errorCode);
+        }
+    }
+
+    @Override
+    public void onConnected(Bundle bundle) {
+        // Get the PendingIntent for the geofence monitoring request.
+        // Send a request to add the current geofences.
+        mGeofenceRequestIntent = getGeofenceTransitionPendingIntent();
+        LocationServices.GeofencingApi.addGeofences(mApiClient, mGeofenceList,
+                mGeofenceRequestIntent);
+        Toast.makeText(this, "CONNECTED", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+        if (null != mGeofenceRequestIntent) {
+            LocationServices.GeofencingApi.removeGeofences(mApiClient, mGeofenceRequestIntent);
+        }
+    }
 }
