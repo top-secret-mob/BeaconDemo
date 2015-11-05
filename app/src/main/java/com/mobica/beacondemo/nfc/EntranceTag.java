@@ -1,11 +1,18 @@
 package com.mobica.beacondemo.nfc;
 
+import android.os.Parcel;
+
 /**
- * Created by woos on 2015-11-02.
+ * Represents NFC tag placed next to store entrance
  */
 public class EntranceTag extends NfcTag {
 
     public EntranceTag(String storeId) {
         super(storeId);
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
     }
 }

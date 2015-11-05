@@ -23,6 +23,15 @@ public class BleAdapter {
                 && context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE);
     }
 
+    public static boolean isBleEnabled(Context context) {
+        if (!isBleSupported(context)) {
+            return false;
+        }
+
+        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        return bluetoothAdapter != null && bluetoothAdapter.isEnabled();
+    }
+
     private static boolean switchBle(Context context, boolean enable) {
         if (!isBleSupported(context)) {
             return false;
