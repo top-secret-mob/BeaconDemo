@@ -106,6 +106,15 @@ public class MainActivity extends AppCompatActivity
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
+        // Handle navigation view item clicks here.
+        int id = item.getItemId();
+
+        if (id == R.id.nav_manage) {
+            startActivity(new Intent(this, SettingsActivity.class));
+        }
+
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawer.closeDrawer(GravityCompat.START);
         return true;
     }
 
@@ -148,7 +157,8 @@ public class MainActivity extends AppCompatActivity
         final Geofence kfcFence = new Geofence.Builder()
                 .setRequestId("1")
                 .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER | Geofence.GEOFENCE_TRANSITION_EXIT)
-                .setCircularRegion(53.431702, 14.555048, 100)
+                .setCircularRegion(53.429216, 14.555992, 100)
+//                .setCircularRegion(53.431702, 14.555048, 100)
                 .setExpirationDuration(Geofence.NEVER_EXPIRE)
                 .build();
         mGeofenceList.add(kfcFence);

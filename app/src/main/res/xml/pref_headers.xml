@@ -1,0 +1,10 @@
+<preference-headers xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- These settings headers are only used on tablets. -->
+
+    <header
+        android:fragment="com.mobica.beacondemo.SettingsActivity$BluetoothPreferenceFragment"
+        android:title="@string/pref_header_bluetooth"
+        android:icon="@drawable/ic_settings_bluetooth_black_24dp"/>
+
+</preference-headers>

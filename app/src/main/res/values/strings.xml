@@ -5,4 +5,27 @@
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
     <string name="action_settings">Settings</string>
+    <string name="title_activity_settings">Settings</string>
+
+    <!-- Strings related to Settings -->
+
+    <!-- Example General settings -->
+    <string name="pref_header_bluetooth">Bluetooth settings</string>
+
+    <string name="pref_title_bt_auto_switch">Enable BLE auto switch</string>
+    <string name="pref_description_bt_auto_switch">Enables BLE auto switching based on device location</string>
+
+    <string name="pref_title_bt_auto_switch_mode">BLE auto switch mode</string>
+    <string-array name="pref_bt_switch_modes_titles">
+        <item>NFC</item>
+        <item>Geofencing</item>
+        <item>WIFI scanning (active)</item>
+        <item>WIFI scanning (passive)</item>
+    </string-array>
+    <string-array name="pref_bt_switch_modes_values">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+    </string-array>
 </resources>
