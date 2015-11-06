@@ -2,18 +2,16 @@
 
     <SwitchPreference
         android:key="bt_auto_mode_switch"
-        android:title="@string/pref_title_bt_auto_switch"
+        android:defaultValue="false"
         android:summary="@string/pref_description_bt_auto_switch"
-        android:defaultValue="false" />
+        android:title="@string/pref_title_bt_auto_switch" />
 
-    <ListPreference
+    <MultiSelectListPreference
         android:key="bt_auto_switch_modes"
-        android:title="@string/pref_title_bt_auto_switch_mode"
-        android:defaultValue="0"
+        android:defaultValue="@array/pref_bt_switch_modes_values"
+        android:enabled="false"
         android:entries="@array/pref_bt_switch_modes_titles"
         android:entryValues="@array/pref_bt_switch_modes_values"
-        android:negativeButtonText="@null"
-        android:positiveButtonText="@null"
-        android:enabled="false"/>
+        android:title="@string/pref_title_bt_auto_switch_mode" />
 
 </PreferenceScreen>

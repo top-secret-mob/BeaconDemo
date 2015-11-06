@@ -3,10 +3,12 @@ package com.mobica.beacondemo;
 
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.ListPreference;
+import android.preference.MultiSelectListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
@@ -14,7 +16,9 @@ import android.preference.SwitchPreference;
 import android.support.v7.app.ActionBar;
 import android.view.MenuItem;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class SettingsActivity extends AppCompatPreferenceActivity {
     @Override
@@ -81,7 +85,22 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                         index >= 0
                                 ? listPreference.getEntries()[index]
                                 : null);
+            } else if (preference instanceof MultiSelectListPreference && value instanceof Set) {
+                final Set<String> values = (Set<String>) value;
+                MultiSelectListPreference listPreference = (MultiSelectListPreference) preference;
+                String summary = "";
 
+                for (String v : values) {
+                    int index = listPreference.findIndexOfValue(v);
+                    if (index >= 0) {
+                        if (!summary.isEmpty()) {
+                            summary += ", ";
+                        }
+                        summary += listPreference.getEntries()[index];
+                    }
+                }
+
+                preference.setSummary(summary);
             } else {
                 // For all other preferences, set the summary to the value's
                 // simple string representation.
@@ -104,12 +123,18 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         // Set the listener to watch for value changes.
         preference.setOnPreferenceChangeListener(sBindPreferenceSummaryToValueListener);
 
+        final SharedPreferences sharedPreferences = PreferenceManager
+                .getDefaultSharedPreferences(preference.getContext());
+
         // Trigger the listener immediately with the preference's
         // current value.
-        sBindPreferenceSummaryToValueListener.onPreferenceChange(preference,
-                PreferenceManager
-                        .getDefaultSharedPreferences(preference.getContext())
-                        .getString(preference.getKey(), ""));
+        if (preference instanceof MultiSelectListPreference) {
+            sBindPreferenceSummaryToValueListener.onPreferenceChange(preference,
+                    sharedPreferences.getStringSet(preference.getKey(), new HashSet<String>()));
+        } else {
+            sBindPreferenceSummaryToValueListener.onPreferenceChange(preference,
+                    sharedPreferences.getString(preference.getKey(), ""));
+        }
     }
 
     /**
@@ -129,7 +154,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
 
         private SwitchPreference autoSwitchModeSwitch;
-        private ListPreference autoSwitchModes;
+        private MultiSelectListPreference autoSwitchModes;
 
         @Override
         public void onCreate(Bundle savedInstanceState) {
@@ -138,7 +163,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             setHasOptionsMenu(true);
 
             autoSwitchModeSwitch = (SwitchPreference) findPreference("bt_auto_mode_switch");
-            autoSwitchModes = (ListPreference) findPreference("bt_auto_switch_modes");
+            autoSwitchModes = (MultiSelectListPreference) findPreference("bt_auto_switch_modes");
             bindPreferenceSummaryToValue(autoSwitchModes);
 
             bindSwitchWithList();

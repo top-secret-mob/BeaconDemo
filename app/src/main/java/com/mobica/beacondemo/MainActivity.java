@@ -79,7 +79,7 @@ public class MainActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
 
         if (checkPlayServices()) {
-//            // Start IntentService to register this application with GCM.
+//            // Start IntentService to setup this application with GCM.
 //            Intent intent = new Intent(this, RegistrationIntentService.class);
 //            startService(intent);
         }

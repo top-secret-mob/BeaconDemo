@@ -12,6 +12,7 @@ import android.support.v4.app.NotificationCompat;
 import com.mobica.beacondemo.BeaconApplication;
 import com.mobica.beacondemo.MainActivity;
 import com.mobica.beacondemo.R;
+import com.mobica.beacondemo.config.ConfigStorage;
 
 public class StoreDiscoveryService extends IntentService {
     private static final String ACTION_STORE_ENTRY = "ACTION_STORE_ENTRY";
@@ -25,16 +26,9 @@ public class StoreDiscoveryService extends IntentService {
      * Request code used by notification about store exit
      */
     private final static int STORE_EXIT_REQUEST = 9003;
-    private boolean wasBleEnabled = false;
 
     public StoreDiscoveryService() {
         super(StoreDiscoveryService.class.getSimpleName());
-    }
-
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        wasBleEnabled = BleAdapter.isBleEnabled(this);
     }
 
     public static void registerEntrance() {
@@ -57,7 +51,7 @@ public class StoreDiscoveryService extends IntentService {
             BleAdapter.enableBle(this);
             sendEntranceNotification();
         } else if (ACTION_STORE_EXIT.equals(action)) {
-            if (!wasBleEnabled) {
+            if (!ConfigStorage.wasBleEnabled.get()) {
                 BleAdapter.disableBle(this);
             }
             sendExitNotification();

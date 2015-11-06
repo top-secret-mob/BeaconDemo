@@ -3,6 +3,8 @@ package com.mobica.beacondemo;
 import android.app.Application;
 import android.content.Context;
 
+import com.mobica.beacondemo.ble.BleAdapter;
+import com.mobica.beacondemo.config.ConfigStorage;
 import com.mobica.beacondemo.volley.VolleyScheduler;
 
 /**
@@ -18,6 +20,9 @@ public class BeaconApplication extends Application {
 
         // initialize volley
         VolleyScheduler.init(this);
+
+        ConfigStorage.setup();
+        ConfigStorage.wasBleEnabled.set(BleAdapter.isBleEnabled(this));
     }
 
     public static Context getAppContext() {
