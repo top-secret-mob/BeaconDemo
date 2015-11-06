@@ -24,6 +24,7 @@ public class ConfigStorage {
      * Whether NFC mode is enabled for BLE switching
      */
     public static IStore.Parameter<EnumSet<SwitchMode>> bleSwitchMode;
+    public static IStore.Parameter<Boolean> nfcModeEnabled;
 
     public static void setup() {
         final SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(
@@ -41,6 +42,8 @@ public class ConfigStorage {
         mapping.put("3", SwitchMode.WIFI_PASSIVE);
         bleSwitchMode = new EnumSetParam<>(sharedPreferencesStore, "bt_auto_switch_modes",
                 EnumSet.noneOf(SwitchMode.class), SwitchMode.class, mapping);
+
+        wasBleEnabled = new BooleanParam(memoryStore, "wasBleEnabled", false);
     }
 
     /**
