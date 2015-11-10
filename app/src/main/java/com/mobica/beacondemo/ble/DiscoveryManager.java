@@ -1,26 +1,35 @@
 package com.mobica.beacondemo.ble;
 
 import android.content.Context;
-import android.content.Intent;
 import android.util.Log;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
-import com.mobica.beacondemo.BeaconApplication;
 import com.mobica.beacondemo.config.ConfigStorage;
-import com.mobica.beacondemo.gcm.RegistrationIntentService;
 import com.mobica.beacondemo.geofence.GeofenceProvider;
+import com.mobica.beacondemo.wifi.ScannerClient;
 import com.mobica.beacondemo.wifi.WifiScanner;
 
 import java.util.EnumSet;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 /**
  * Manages the state of different device discovery modes
  */
+@Singleton
 public class DiscoveryManager {
     private static final String TAG = DiscoveryManager.class.getSimpleName();
-    private GeofenceProvider geofenceProvider;
-    private WifiScanner wifiScanner;
+
+    @Inject
+    Context context;
+    @Inject
+    WifiScanner wifiScanner;
+    @Inject
+    ScannerClient scannerClient;
+    @Inject
+    GeofenceProvider geofenceProvider;
 
     public void updateModes(EnumSet<DiscoveryMode> activeModes) {
         boolean autoMode = ConfigStorage.bleAutoModeEnabled.get();
@@ -35,43 +44,38 @@ public class DiscoveryManager {
     }
 
     private void switchGeoFencingMode(boolean enabled) {
-        if (enabled && geofenceProvider == null) {
-            geofenceProvider = new GeofenceProvider(BeaconApplication.getAppContext());
+        if (enabled && geofenceProvider.getState() == GeofenceProvider.State.DISCONNECTED) {
+            Log.d(TAG, "Enabling geofencing");
             geofenceProvider.connect();
-        } else if (!enabled && geofenceProvider != null) {
+        } else if (!enabled && geofenceProvider.getState() != GeofenceProvider.State.DISCONNECTED) {
+            Log.d(TAG, "Disabling geofencing");
             geofenceProvider.disconnect();
-            geofenceProvider = null;
         }
     }
 
     private void switchWifiPassiveMode(boolean enabled) {
-        final Context context = BeaconApplication.getAppContext();
-        if (enabled && !ConfigStorage.registrationPerformed.get()) {
-            ConfigStorage.registrationPerformed.set(true);
-            final Intent intent = new Intent(context, RegistrationIntentService.class);
-            intent.setAction(RegistrationIntentService.ACTION_REGISTER);
-            context.startService(intent);
-        } else if (!enabled && ConfigStorage.registrationPerformed.get()) {
-            ConfigStorage.registrationPerformed.set(false);
-            final Intent intent = new Intent(context, RegistrationIntentService.class);
-            intent.setAction(RegistrationIntentService.ACTION_UNREGISTER);
-            context.startService(intent);
+        if (enabled && scannerClient.getState() == ScannerClient.State.UNREGISTERED) {
+            Log.d(TAG, "Enabling wifi passive scanning");
+            scannerClient.register();
+        } else if (!enabled && scannerClient.getState() == ScannerClient.State.REGISTERED) {
+            Log.d(TAG, "Disabling wifi passive scanning");
+            scannerClient.unregister();
         }
     }
 
     private void switchWifiActiveMode(boolean enabled) {
-        if (enabled && wifiScanner == null) {
-            wifiScanner = new WifiScanner();
+        if (enabled && !wifiScanner.isActive()) {
+            Log.d(TAG, "Enabling wifi active scanning");
             wifiScanner.startScanner();
-        } else if (!enabled && wifiScanner != null) {
+        } else if (!enabled && wifiScanner.isActive()) {
+            Log.d(TAG, "Disabling wifi active scanning");
             wifiScanner.stopScanner();
-            wifiScanner = null;
         }
     }
 
     private boolean checkPlayServices() {
         GoogleApiAvailability apiAvailability = GoogleApiAvailability.getInstance();
-        int resultCode = apiAvailability.isGooglePlayServicesAvailable(BeaconApplication.getAppContext());
+        int resultCode = apiAvailability.isGooglePlayServicesAvailable(context);
         if (resultCode != ConnectionResult.SUCCESS) {
             Log.i(TAG, "Google play services are not available on this device.");
             return false;

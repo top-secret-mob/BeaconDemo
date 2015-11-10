@@ -11,7 +11,6 @@ import com.android.volley.VolleyError;
 import com.google.common.base.Strings;
 import com.google.gson.Gson;
 import com.mobica.beacondemo.R;
-import com.mobica.beacondemo.config.ConfigStorage;
 import com.mobica.beacondemo.model.MacRegisterRequest;
 import com.mobica.beacondemo.model.MacUnregisterRequest;
 import com.mobica.beacondemo.model.WsResponse;
@@ -47,11 +46,11 @@ public class RegistrationIntentService extends IntentService {
                     registerToServer(TokenStore.token);
                 } else {
                     Log.e(TAG, "Failed to retrieve GCM token");
-                    ConfigStorage.registrationPerformed.set(false);
+                    sendLocalBroadcast(new Intent(GcmMessages.WS_REGISTRATION_FAILED));
                 }
             } catch (Exception e) {
-                Log.d(TAG, "Failed to complete token refresh", e);
-                ConfigStorage.registrationPerformed.set(false);
+                Log.e(TAG, "Failed to complete token refresh", e);
+                sendLocalBroadcast(new Intent(GcmMessages.WS_REGISTRATION_FAILED));
             }
         } else if (ACTION_UNREGISTER.equals(action)) {
             unregisterFromServer();
@@ -67,6 +66,7 @@ public class RegistrationIntentService extends IntentService {
         final String mac = HwUtils.getWifiMacAddress();
         if (Strings.isNullOrEmpty(mac)) {
             Log.e(TAG, "Failed to retrieve Wifi adapter MAC address");
+            sendLocalBroadcast(new Intent(GcmMessages.WS_REGISTRATION_FAILED));
             return;
         }
 
@@ -80,26 +80,20 @@ public class RegistrationIntentService extends IntentService {
                         Log.d(TAG, "WS subscription finished=" + response.getStatus());
 
                         if (response.getStatus() == WsResponse.Status.success) {
-                            ConfigStorage.isRegistered.set(true);
-                            LocalBroadcastManager.getInstance(RegistrationIntentService.this)
-                                    .sendBroadcast(new Intent(GcmPreferences.WS_SUBSCRIPTION_SUCCESS));
+                            sendLocalBroadcast(new Intent(GcmMessages.WS_REGISTRATION_SUCCEEDED));
                         } else {
-                            LocalBroadcastManager.getInstance(RegistrationIntentService.this)
-                                    .sendBroadcast(new Intent(GcmPreferences.WS_SUBSCRIPTION_FAILED));
+                            sendLocalBroadcast(new Intent(GcmMessages.WS_REGISTRATION_FAILED));
                         }
                     }
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
                 Log.d(TAG, "WS subscription failed=" + error.getCause());
-                LocalBroadcastManager.getInstance(RegistrationIntentService.this)
-                        .sendBroadcast(new Intent(GcmPreferences.WS_SUBSCRIPTION_FAILED));
-                ConfigStorage.isRegistered.set(false);
+                sendLocalBroadcast(new Intent(GcmMessages.WS_REGISTRATION_FAILED));
             }
         });
 
         VolleyScheduler.enqueue(req);
-        ConfigStorage.registrationPerformed.set(true);
     }
 
     /**
@@ -109,6 +103,7 @@ public class RegistrationIntentService extends IntentService {
         final String mac = HwUtils.getWifiMacAddress();
         if (Strings.isNullOrEmpty(mac)) {
             Log.e(TAG, "Failed to retrieve Wifi adapter MAC address");
+            sendLocalBroadcast(new Intent(GcmMessages.WS_DEREGISTRATION_FAILED));
             return;
         }
 
@@ -122,17 +117,23 @@ public class RegistrationIntentService extends IntentService {
                         Log.d(TAG, "WS unsubscription finished=" + response.getStatus());
 
                         if (response.getStatus() == WsResponse.Status.success) {
-                            ConfigStorage.isRegistered.set(false);
+                            sendLocalBroadcast(new Intent(GcmMessages.WS_DEREGISTRATION_SUCCEEDED));
+                        } else {
+                            sendLocalBroadcast(new Intent(GcmMessages.WS_DEREGISTRATION_FAILED));
                         }
                     }
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                Log.d(TAG, "WS subscription failed=" + error.getCause());
+                Log.d(TAG, "WS deregistration failed=" + error.getCause());
+                sendLocalBroadcast(new Intent(GcmMessages.WS_DEREGISTRATION_FAILED));
             }
         });
 
         VolleyScheduler.enqueue(req);
-        ConfigStorage.registrationPerformed.set(false);
+    }
+
+    private void sendLocalBroadcast(Intent intent) {
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
 }

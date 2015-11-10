@@ -12,48 +12,68 @@ import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.LocationServices;
 
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
 
 /**
  * Provider class for geo fencing functionality
  */
+@Singleton
 public class GeofenceProvider implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener, GeoFencesFetcher.GeoFencesFetcherListener {
     private static final String TAG = GeofenceProvider.class.getSimpleName();
-    private final Context context;
+
+    public enum State {
+        DISCONNECTED,
+        CONNECTING,
+        CONNECTED,
+        SUSPENDED
+    }
+
     // Stores the PendingIntent used to request geo fence monitoring.
     private PendingIntent geofenceRequestIntent;
     private GoogleApiClient apiClient;
     private GeoFencesFetcher fetcher;
     private List<Geofence> geofenceList;
-    private final AtomicBoolean connected = new AtomicBoolean();
+    private State state = State.DISCONNECTED;
 
-    public GeofenceProvider(Context context) {
-        this.context = context;
-    }
+    @Inject
+    Context context;
+    @Inject
+    GeoFencesFetcherFactory geoFencesFetcherFactory;
+    @Inject
+    GoogleApiClientFactory googleApiClientFactory;
 
     public synchronized void connect() {
-        fetcher = new GeoFencesFetcher(this);
-        apiClient = new GoogleApiClient.Builder(context)
-                .addApi(LocationServices.API)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .build();
+        if (state != State.DISCONNECTED) {
+            // already connected/connecting
+            return;
+        }
+
+        apiClient = googleApiClientFactory.create(context, LocationServices.API, this, this);
+
+        state = State.CONNECTING;
         apiClient.connect();
     }
 
     public synchronized void disconnect() {
-        if (apiClient != null) {
+        if (state != State.DISCONNECTED) {
             apiClient.disconnect();
-            apiClient = null;
+            state = State.DISCONNECTED;
         }
+    }
+
+    public synchronized State getState() {
+        return state;
     }
 
     @Override
     public void onConnected(Bundle bundle) {
         Log.d(TAG, "LocationServices connected");
 
-        connected.set(true);
+        state = State.CONNECTED;
+        fetcher = geoFencesFetcherFactory.create(this);
         fetcher.execute();
     }
 
@@ -61,7 +81,7 @@ public class GeofenceProvider implements GoogleApiClient.ConnectionCallbacks,
     public void onConnectionSuspended(int i) {
         Log.d(TAG, "LocationServices connection suspended");
 
-        connected.set(false);
+        state = State.SUSPENDED;
         fetcher.cancel(true);
 
         if (geofenceRequestIntent != null && geofenceList != null) {
@@ -72,12 +92,12 @@ public class GeofenceProvider implements GoogleApiClient.ConnectionCallbacks,
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
         Log.e(TAG, "LocationServices connection failed");
-        connected.set(false);
+        state = State.DISCONNECTED;
     }
 
     @Override
     public void onGeoFencesFetched(List<Geofence> geofences) {
-        if (!connected.get()) {
+        if (getState() != State.CONNECTED) {
             return;
         }
 

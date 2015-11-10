@@ -16,15 +16,24 @@ import android.preference.SwitchPreference;
 import android.support.v7.app.ActionBar;
 import android.view.MenuItem;
 
+import com.mobica.beacondemo.ble.DiscoveryManager;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.inject.Inject;
+
 public class SettingsActivity extends AppCompatPreferenceActivity {
+    @Inject
+    DiscoveryManager discoveryManager;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setupActionBar();
+
+        BeaconApplication.getGraph().inject(this);
     }
 
     /**
@@ -192,6 +201,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                     public boolean onPreferenceChange(Preference preference, Object o) {
                         final boolean on = (Boolean) o;
                         autoSwitchModes.setEnabled(on);
+
                         return true;
                     }
                 };
