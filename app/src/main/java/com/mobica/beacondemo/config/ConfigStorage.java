@@ -5,7 +5,7 @@ import android.preference.PreferenceManager;
 
 import com.google.common.collect.Sets;
 import com.mobica.beacondemo.BeaconApplication;
-import com.mobica.beacondemo.ble.SwitchMode;
+import com.mobica.beacondemo.ble.DiscoveryMode;
 
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -23,8 +23,23 @@ public class ConfigStorage {
     /**
      * Whether NFC mode is enabled for BLE switching
      */
-    public static IStore.Parameter<EnumSet<SwitchMode>> bleSwitchMode;
-    public static IStore.Parameter<Boolean> nfcModeEnabled;
+    public static IStore.Parameter<EnumSet<DiscoveryMode>> bleSwitchMode;
+    /**
+     * Whether BLE auto switch is enabled
+     */
+    public static IStore.Parameter<Boolean> bleAutoModeEnabled;
+    /**
+     * Whether registration to web service was performed
+     */
+    public static IStore.Parameter<Boolean> registrationPerformed;
+    /**
+     * Whether registration to web service is complete
+     */
+    public static IStore.Parameter<Boolean> isRegistered;
+    /**
+     * Whether user is currently in store
+     */
+    public static IStore.Parameter<Boolean> isInStore;
 
     public static void setup() {
         final SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(
@@ -33,17 +48,21 @@ public class ConfigStorage {
                 new SharedPreferencesStore(preferences);
         final MemoryStore memoryStore = new MemoryStore();
 
+        // volatile parameters
         wasBleEnabled = new BooleanParam(memoryStore, "wasBleEnabled", false);
+        registrationPerformed = new BooleanParam(memoryStore, "registrationPerformed", false);
+        isRegistered = new BooleanParam(memoryStore, "isRegisteredToWs", false);
+        isInStore = new BooleanParam(memoryStore, "isInStore", false);
 
-        final Map<String, SwitchMode> mapping = new HashMap<>();
-        mapping.put("0", SwitchMode.NFC);
-        mapping.put("1", SwitchMode.GEOFENCING);
-        mapping.put("2", SwitchMode.WIFI_ACTIVE);
-        mapping.put("3", SwitchMode.WIFI_PASSIVE);
+        // persistent parameters
+        final Map<String, DiscoveryMode> mapping = new HashMap<>();
+        mapping.put("0", DiscoveryMode.NFC);
+        mapping.put("1", DiscoveryMode.GEOFENCING);
+        mapping.put("2", DiscoveryMode.WIFI_ACTIVE);
+        mapping.put("3", DiscoveryMode.WIFI_PASSIVE);
         bleSwitchMode = new EnumSetParam<>(sharedPreferencesStore, "bt_auto_switch_modes",
-                EnumSet.noneOf(SwitchMode.class), SwitchMode.class, mapping);
-
-        wasBleEnabled = new BooleanParam(memoryStore, "wasBleEnabled", false);
+                EnumSet.noneOf(DiscoveryMode.class), DiscoveryMode.class, mapping);
+        bleAutoModeEnabled = new BooleanParam(sharedPreferencesStore, "bt_auto_mode_switch", false);
     }
 
     /**

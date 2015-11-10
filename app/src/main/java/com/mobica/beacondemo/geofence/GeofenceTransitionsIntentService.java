@@ -6,6 +6,8 @@ import android.util.Log;
 
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofencingEvent;
+import com.mobica.beacondemo.ble.DiscoveryMode;
+import com.mobica.beacondemo.ble.StoreDiscoveryService;
 
 import java.util.List;
 
@@ -36,9 +38,11 @@ public class GeofenceTransitionsIntentService extends IntentService {
             List<Geofence> triggeredFences = geoFenceEvent.getTriggeringGeofences();
 
             if (Geofence.GEOFENCE_TRANSITION_ENTER == transitionType) {
-                Log.d(TAG, "== ENTERING " + (triggeredFences != null ? triggeredFences.size() : "null"));
+                Log.d(TAG, "== ENTERING " + triggeredFences.get(0).getRequestId());
+                StoreDiscoveryService.registerEntrance(DiscoveryMode.GEOFENCING);
             } else if (Geofence.GEOFENCE_TRANSITION_EXIT == transitionType) {
-                Log.d(TAG, "== EXITING " + (triggeredFences != null ? triggeredFences.size() : "null"));
+                Log.d(TAG, "== EXITING " + triggeredFences.get(0).getRequestId());
+                StoreDiscoveryService.registerExit(DiscoveryMode.GEOFENCING);
             }
         }
     }

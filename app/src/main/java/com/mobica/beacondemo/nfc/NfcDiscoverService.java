@@ -12,7 +12,9 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import com.google.common.base.Strings;
+import com.mobica.beacondemo.ble.DiscoveryMode;
 import com.mobica.beacondemo.ble.StoreDiscoveryService;
+import com.mobica.beacondemo.config.ConfigStorage;
 
 import java.util.Arrays;
 import java.util.regex.Matcher;
@@ -60,9 +62,13 @@ public class NfcDiscoverService extends IntentService {
                 final NfcTag nfcTag = parsePath(uri.getEncodedPath());
                 if (nfcTag != null) {
                     if (nfcTag instanceof EntranceTag) {
-                        StoreDiscoveryService.registerEntrance();
+                        if (ConfigStorage.bleSwitchMode.get().contains(DiscoveryMode.NFC)) {
+                            StoreDiscoveryService.registerEntrance(DiscoveryMode.NFC);
+                        }
                     } else if (nfcTag instanceof ExitTag) {
-                        StoreDiscoveryService.registerExit();
+                        if (ConfigStorage.bleSwitchMode.get().contains(DiscoveryMode.NFC)) {
+                            StoreDiscoveryService.registerExit(DiscoveryMode.NFC);
+                        }
                     } else {
                         final Intent nfcIntent = new Intent(NfcController.ACTION_NFC_TAG_DISCOVERED);
                         nfcIntent.putExtra(NfcController.EXTRA_TAG, nfcTag);

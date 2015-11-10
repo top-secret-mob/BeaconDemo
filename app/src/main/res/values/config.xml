@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- strings -->
     <string name="project_id">123</string>
-    <string name="ws_address">http://192.168.41.28:8080/register</string>
+    <string name="register_api">http://89.174.7.92:50650/discovery/register</string>
+    <string name="unregister_api">http://89.174.7.92:50650/discovery/unregister</string>
+    <string name="wifi_ssid_pattern">nok10</string>
+
+    <!-- integers -->
+    <integer name="wifi_scanning_rate">15</integer>
+    <integer name="wifi_lost_timeout">60</integer>
 </resources>

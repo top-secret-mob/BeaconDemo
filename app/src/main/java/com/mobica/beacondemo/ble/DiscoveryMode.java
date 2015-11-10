@@ -3,7 +3,7 @@ package com.mobica.beacondemo.ble;
 /**
  * BLE switch modes
  */
-public enum SwitchMode {
+public enum DiscoveryMode {
     NFC,
     GEOFENCING,
     WIFI_ACTIVE,

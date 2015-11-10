@@ -1,23 +1,23 @@
 package com.mobica.beacondemo.gcm;
 
-import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.content.Context;
-import android.content.Intent;
-import android.media.RingtoneManager;
-import android.net.Uri;
 import android.os.Bundle;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import com.google.android.gms.gcm.GcmListenerService;
-import com.mobica.beacondemo.MainActivity;
-import com.mobica.beacondemo.R;
-import com.mobica.beacondemo.ble.BleAdapter;
+import com.google.common.base.Strings;
+import com.mobica.beacondemo.ble.DiscoveryMode;
+import com.mobica.beacondemo.ble.StoreDiscoveryService;
 
 public class WsGcmListenerService extends GcmListenerService {
     private static final String TAG = WsGcmListenerService.class.getSimpleName();
+    // GCM message identifier
+    private static final String PARAM_MESSAGE_TYPE = "message_type";
+    // whether device is in WIFI range of a scanner device
+    private static final String PARAM_IN_RANGE = "in_range";
+    // whether device discovery status has changed (in_range value changed)
+    private static final String PARAM_STATUS_CHANGE = "status_change";
+    // GCM message that updates device discovery status
+    private static final String TYPE_DISCOVERY_STATUS = "discovery_status";
 
     public WsGcmListenerService() {
     }
@@ -27,46 +27,35 @@ public class WsGcmListenerService extends GcmListenerService {
         super.onMessageReceived(from, data);
 
         Log.d(TAG, "RECEIVED: from:" + from + " data:" + data);
-        final boolean enabled = data != null && data.getString("bt_enabled", "false").equals("true");
-        final boolean statusChanged = data != null && data.getString("status_change", "false").equals("true");
+        final String messageType = data.getString(PARAM_MESSAGE_TYPE);
+        if (Strings.isNullOrEmpty(messageType)) {
+            Log.e(TAG, "Received incorrect GCM message");
+            return;
+        }
 
-        final Intent intent = new Intent(GcmPreferences.WS_MESSAGE);
-        intent.putExtra(GcmPreferences.EXTRA_BT_STATE, enabled);
-        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
-
-        // show notification only when status changes or if registered when user was already in store
-        if (statusChanged || enabled) {
-            sendNotification(enabled);
-
-            if (enabled) {
-                BleAdapter.enableBle(this);
-            } else {
-                BleAdapter.disableBle(this);
-            }
+        if (TYPE_DISCOVERY_STATUS.equals(messageType)) {
+            processDiscoveryStatusMessage(data);
+        } else {
+            Log.e(TAG, "Received unidentified GCM message");
         }
     }
 
     /**
-     * Create and show a simple notification containing the received GCM message.
+     * Processes messages containing device discovery info
+     *
+     * @param data message body
      */
-    private void sendNotification(boolean enteredStore) {
-        Intent intent = new Intent(this, MainActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0 /* Request code */, intent,
-                PendingIntent.FLAG_ONE_SHOT);
+    private void processDiscoveryStatusMessage(Bundle data) {
+        final boolean enabled = data != null && data.getString(PARAM_IN_RANGE, "false").equals("true");
+        final boolean statusChanged = data != null && data.getString(PARAM_STATUS_CHANGE, "false").equals("true");
 
-        Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this)
-                .setSmallIcon(R.drawable.ic_exit_to_app_white_24dp)
-                .setContentTitle(enteredStore ? "Welcome to store" : "See you soon")
-                .setContentText(enteredStore ? "You've entered into our store" : "Thank you for visiting our store")
-                .setAutoCancel(true)
-                .setSound(defaultSoundUri)
-                .setContentIntent(pendingIntent);
-
-        NotificationManager notificationManager =
-                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-
-        notificationManager.notify(0 /* ID of notification */, notificationBuilder.build());
+        // show notification only when status changes or if registered when user was already in store
+        if (statusChanged || enabled) {
+            if (enabled) {
+                StoreDiscoveryService.registerEntrance(DiscoveryMode.WIFI_PASSIVE);
+            } else {
+                StoreDiscoveryService.registerExit(DiscoveryMode.WIFI_PASSIVE);
+            }
+        }
     }
 }

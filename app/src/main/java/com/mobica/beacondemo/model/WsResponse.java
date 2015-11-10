@@ -3,7 +3,7 @@ package com.mobica.beacondemo.model;
 /**
  * Created by wojtek on 22.10.15.
  */
-public class MacRegisterResponse {
+public class WsResponse {
     public enum Status {
         success,
         error
@@ -12,10 +12,10 @@ public class MacRegisterResponse {
     private Status status;
     private String error;
 
-    public MacRegisterResponse() {
+    public WsResponse() {
     }
 
-    public MacRegisterResponse(Status status, String error) {
+    public WsResponse(Status status, String error) {
         this.status = status;
         this.error = error;
     }
@@ -38,7 +38,7 @@ public class MacRegisterResponse {
 
     @Override
     public String toString() {
-        return "MacRegisterResponse{" +
+        return "WsResponse{" +
                 "status=" + status +
                 ", error='" + error + '\'' +
                 '}';

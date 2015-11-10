@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.support.v4.app.NotificationCompat;
+import android.util.Log;
 
 import com.mobica.beacondemo.BeaconApplication;
 import com.mobica.beacondemo.MainActivity;
@@ -15,6 +16,7 @@ import com.mobica.beacondemo.R;
 import com.mobica.beacondemo.config.ConfigStorage;
 
 public class StoreDiscoveryService extends IntentService {
+    private static final String TAG = StoreDiscoveryService.class.getSimpleName();
     private static final String ACTION_STORE_ENTRY = "ACTION_STORE_ENTRY";
     private static final String ACTION_STORE_EXIT = "ACTION_STORE_EXIT";
     private static final int NOTIFICATION_ID = 123;
@@ -31,16 +33,38 @@ public class StoreDiscoveryService extends IntentService {
         super(StoreDiscoveryService.class.getSimpleName());
     }
 
-    public static void registerEntrance() {
-        final Intent intent = new Intent(BeaconApplication.getAppContext(), StoreDiscoveryService.class);
-        intent.setAction(ACTION_STORE_ENTRY);
-        BeaconApplication.getAppContext().startService(intent);
+    /**
+     * Registers store entrance event
+     *
+     * @param mode mode which triggered this event
+     */
+    public static void registerEntrance(DiscoveryMode mode) {
+        if (!ConfigStorage.isInStore.get()) {
+            ConfigStorage.isInStore.set(true);
+
+            Log.d(TAG, "Store entrance discovered: " + mode);
+
+            final Intent intent = new Intent(BeaconApplication.getAppContext(), StoreDiscoveryService.class);
+            intent.setAction(ACTION_STORE_ENTRY);
+            BeaconApplication.getAppContext().startService(intent);
+        }
     }
 
-    public static void registerExit() {
-        final Intent intent = new Intent(BeaconApplication.getAppContext(), StoreDiscoveryService.class);
-        intent.setAction(ACTION_STORE_EXIT);
-        BeaconApplication.getAppContext().startService(intent);
+    /**
+     * Registers store exit event
+     *
+     * @param mode mode which triggered this event
+     */
+    public static void registerExit(DiscoveryMode mode) {
+        if (ConfigStorage.isInStore.get()) {
+            ConfigStorage.isInStore.set(false);
+
+            Log.d(TAG, "Store exit discovered: " + mode);
+
+            final Intent intent = new Intent(BeaconApplication.getAppContext(), StoreDiscoveryService.class);
+            intent.setAction(ACTION_STORE_EXIT);
+            BeaconApplication.getAppContext().startService(intent);
+        }
     }
 
     @Override

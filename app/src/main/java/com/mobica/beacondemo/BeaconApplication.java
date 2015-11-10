@@ -4,6 +4,7 @@ import android.app.Application;
 import android.content.Context;
 
 import com.mobica.beacondemo.ble.BleAdapter;
+import com.mobica.beacondemo.ble.DiscoveryManager;
 import com.mobica.beacondemo.config.ConfigStorage;
 import com.mobica.beacondemo.volley.VolleyScheduler;
 
@@ -23,6 +24,7 @@ public class BeaconApplication extends Application {
 
         ConfigStorage.setup();
         ConfigStorage.wasBleEnabled.set(BleAdapter.isBleEnabled(this));
+        new DiscoveryManager().updateModes(ConfigStorage.bleSwitchMode.get());
     }
 
     public static Context getAppContext() {
