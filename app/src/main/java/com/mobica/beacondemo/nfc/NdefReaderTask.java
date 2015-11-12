@@ -10,6 +10,8 @@ import android.util.Log;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.mobica.discoverysdk.nfc.NfcParserListener;
+import com.mobica.discoverysdk.nfc.NfcTag;
 
 import java.util.Arrays;
 import java.util.regex.Matcher;
@@ -17,7 +19,6 @@ import java.util.regex.Pattern;
 
 class NdefReaderTask extends AsyncTask<Tag, Void, NfcTag> {
     private static final String TAG = NdefReaderTask.class.getSimpleName();
-    private static final Pattern ENTRANCE_PATTERN = Pattern.compile("/*store/(\\w+)/entrance");
     // identifies store item (i.e. phone on a shelf)
     private static final Pattern ITEM_PATTERN = Pattern.compile("/*store/(\\w+)/item/(\\w+)");
     private final NfcParserListener listener;
@@ -68,22 +69,11 @@ class NdefReaderTask extends AsyncTask<Tag, Void, NfcTag> {
             return null;
         }
 
-        // entrance tag
-        if (ENTRANCE_PATTERN.matcher(path).matches()) {
-            return parseEntranceTag(path);
-        } else if (ITEM_PATTERN.matcher(path).matches()) {
+        // item tag
+        if (ITEM_PATTERN.matcher(path).matches()) {
             return parseItemTag(path);
         }
 
-        return null;
-    }
-
-    private NfcTag parseEntranceTag(String path) {
-        final Matcher matcher = ENTRANCE_PATTERN.matcher(path);
-
-        if (matcher.find() && matcher.groupCount() > 0) {
-            return new EntranceTag(matcher.group(1));
-        }
         return null;
     }
 

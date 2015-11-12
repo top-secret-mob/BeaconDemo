@@ -3,11 +3,13 @@ package com.mobica.beacondemo;
 import android.app.Application;
 import android.content.Context;
 
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.Volley;
 import com.mobica.beacondemo.ble.BleAdapter;
 import com.mobica.beacondemo.ble.DiscoveryManager;
 import com.mobica.beacondemo.config.ConfigStorage;
 import com.mobica.beacondemo.dagger.BeaconModule;
-import com.mobica.beacondemo.volley.VolleyScheduler;
+import com.mobica.discoverysdk.DiscoverySdk;
 
 import dagger.ObjectGraph;
 
@@ -24,16 +26,17 @@ public class BeaconApplication extends Application {
         BeaconApplication.applicationContext = this;
 
         // initialize dagger
-        BeaconApplication.graph = ObjectGraph.create(new BeaconModule(this));
+        BeaconApplication.graph = ObjectGraph.create(new BeaconModule(this, Volley.newRequestQueue(this)));
 
-        // initialize volley
-        VolleyScheduler.init(this);
+        // initialize discovery sdk
+        DiscoverySdk.init(this, graph.get(RequestQueue.class));
+
 
         ConfigStorage.setup();
         ConfigStorage.wasBleEnabled.set(BleAdapter.isBleEnabled(this));
 
         final DiscoveryManager discoveryManager = graph.get(DiscoveryManager.class);
-        discoveryManager.updateModes(ConfigStorage.bleSwitchMode.get());
+        discoveryManager.updateModes(ConfigStorage.bleSwitchModes.get());
     }
 
     public static Context getAppContext() {

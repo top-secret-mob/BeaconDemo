@@ -41,39 +41,9 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".nfc.DiscoverActivity"
+            android:name="com.mobica.discoverysdk.nfc.DiscoverActivity"
             android:launchMode="singleTask"
             android:theme="@android:style/Theme.NoDisplay" >
-            <intent-filter>
-                <action android:name="android.nfc.action.NDEF_DISCOVERED" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-
-                <data
-                    android:host="t-mobile.com"
-                    android:pathPattern="/store/.*/entrance"
-                    android:scheme="tmnfc" />
-            </intent-filter>
-            <intent-filter>
-                <action android:name="android.nfc.action.NDEF_DISCOVERED" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-
-                <data
-                    android:host="t-mobile.com"
-                    android:pathPattern="/store/.*/exit"
-                    android:scheme="tmnfc" />
-            </intent-filter>
-            <intent-filter>
-                <action android:name="android.nfc.action.NDEF_DISCOVERED" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-
-                <data
-                    android:host="t-mobile.com"
-                    android:pathPattern="/store/.*/item/.*"
-                    android:scheme="tmnfc" />
-            </intent-filter>
         </activity>
 
         <receiver
@@ -88,29 +58,11 @@
         </receiver>
 
         <service
-            android:name=".gcm.WsGcmListenerService"
-            android:exported="false" >
-            <intent-filter>
-                <action android:name="com.google.android.c2dm.intent.RECEIVE" />
-            </intent-filter>
-        </service>
-        <service
-            android:name=".gcm.InstanceIdListenerService"
-            android:exported="false" >
-            <intent-filter>
-                <action android:name="com.google.android.gms.iid.InstanceID" />
-            </intent-filter>
-        </service>
-        <service
-            android:name=".gcm.RegistrationIntentService"
+            android:name="com.mobica.discoverysdk.geofence.GeofenceTransitionsIntentService"
             android:exported="false" >
         </service>
         <service
-            android:name=".geofence.GeofenceTransitionsIntentService"
-            android:exported="false" >
-        </service>
-        <service
-            android:name=".nfc.NfcDiscoverService"
+            android:name="com.mobica.discoverysdk.nfc.NfcDiscoverService"
             android:exported="false" >
         </service>
 
@@ -120,7 +72,7 @@
         </activity>
 
         <service
-            android:name=".ble.StoreDiscoveryService"
+            android:name="com.mobica.discoverysdk.ble.StoreDiscoveryService"
             android:enabled="true"
             android:exported="false" >
         </service>

@@ -2,13 +2,12 @@ package com.mobica.beacondemo.dagger;
 
 import android.content.Context;
 
+import com.android.volley.RequestQueue;
 import com.mobica.beacondemo.SettingsActivity;
 import com.mobica.beacondemo.ble.DiscoveryManager;
-import com.mobica.beacondemo.geofence.GeoFencesFetcherFactory;
-import com.mobica.beacondemo.geofence.GeofenceProvider;
-import com.mobica.beacondemo.geofence.GoogleApiClientFactory;
-import com.mobica.beacondemo.wifi.ScannerClient;
-import com.mobica.beacondemo.wifi.WifiScanner;
+import com.mobica.beacondemo.gcm.RegistrationIntentService;
+import com.mobica.beacondemo.gcm.WsGcmListenerService;
+import com.mobica.discoverysdk.gcm.GcmMessageProxy;
 
 import dagger.Module;
 import dagger.Provides;
@@ -16,17 +15,24 @@ import dagger.Provides;
 /**
  * Dagger main module
  */
-@Module (injects = {DiscoveryManager.class, Context.class, WifiScanner.class, GeofenceProvider.class,
-        GeoFencesFetcherFactory.class, GoogleApiClientFactory.class, ScannerClient.class, SettingsActivity.class})
+@Module(injects = {Context.class, GcmMessageProxy.class, RequestQueue.class, RegistrationIntentService.class,
+        WsGcmListenerService.class, DiscoveryManager.class, SettingsActivity.class})
 public class BeaconModule {
     private final Context appContext;
+    private final RequestQueue requestQueue;
 
-    public BeaconModule(Context appContext) {
+    public BeaconModule(Context appContext, RequestQueue queue) {
         this.appContext = appContext;
+        this.requestQueue = queue;
     }
 
     @Provides
     public Context provideContext() {
         return appContext;
+    }
+
+    @Provides
+    public RequestQueue provideRequestQueue() {
+        return requestQueue;
     }
 }

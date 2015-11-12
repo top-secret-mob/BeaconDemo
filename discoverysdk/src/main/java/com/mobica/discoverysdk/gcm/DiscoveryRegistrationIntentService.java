@@ -1,4 +1,4 @@
-package com.mobica.beacondemo.gcm;
+package com.mobica.discoverysdk.gcm;
 
 import android.app.IntentService;
 import android.content.Intent;
@@ -11,10 +11,10 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.google.common.base.Strings;
 import com.google.gson.Gson;
-import com.mobica.beacondemo.BeaconApplication;
-import com.mobica.beacondemo.R;
-import com.mobica.beacondemo.model.MacRegisterRequest;
-import com.mobica.beacondemo.model.MacUnregisterRequest;
+import com.mobica.discoverysdk.R;
+import com.mobica.discoverysdk.dagger.Graphs;
+import com.mobica.discoverysdk.gcm.model.DiscoveryRegisterRequest;
+import com.mobica.discoverysdk.gcm.model.DiscoveryUnregisterRequest;
 import com.mobica.discoverysdk.gcm.model.WsResponse;
 import com.mobica.discoverysdk.utils.HwUtils;
 import com.mobica.discoverysdk.volley.GsonRequest;
@@ -27,22 +27,22 @@ import javax.inject.Inject;
  * a service on a separate handler thread.
  * <p/>
  */
-public class RegistrationIntentService extends IntentService {
-    private static final String TAG = RegistrationIntentService.class.getSimpleName();
+public class DiscoveryRegistrationIntentService extends IntentService {
+    private static final String TAG = DiscoveryRegistrationIntentService.class.getSimpleName();
     public static final String ACTION_REGISTER = "ACTION_REGISTER";
     public static final String ACTION_UNREGISTER = "ACTION_UNREGISTER";
 
     @Inject
     RequestQueue requestQueue;
 
-    public RegistrationIntentService() {
-        super(TAG);
+    public DiscoveryRegistrationIntentService() {
+        super(DiscoveryRegistrationIntentService.class.getSimpleName());
     }
 
     @Override
     public void onCreate() {
         super.onCreate();
-        BeaconApplication.getGraph().inject(this);
+        Graphs.inject(this);
     }
 
     @Override
@@ -50,39 +50,24 @@ public class RegistrationIntentService extends IntentService {
         final String action = intent.getAction();
 
         if (ACTION_REGISTER.equals(action)) {
-            try {
-                TokenStore.updateToken(this);
-                Log.i(TAG, "GCM Registration Token: " + TokenStore.token);
-
-                if (TokenStore.token != null) {
-                    registerToServer(TokenStore.token);
-                } else {
-                    Log.e(TAG, "Failed to retrieve GCM token");
-                    sendLocalBroadcast(new Intent(GcmMessages.WS_REGISTRATION_FAILED));
-                }
-            } catch (Exception e) {
-                Log.e(TAG, "Failed to complete token refresh", e);
-                sendLocalBroadcast(new Intent(GcmMessages.WS_REGISTRATION_FAILED));
-            }
+            registerForDiscoveryEvents();
         } else if (ACTION_UNREGISTER.equals(action)) {
-            unregisterFromServer();
+            unregisterFromDiscoveryEvents();
         }
     }
 
     /**
      * Send Gcm token to our service
-     *
-     * @param token The new token.
      */
-    private void registerToServer(String token) {
+    private void registerForDiscoveryEvents() {
         final String mac = HwUtils.getWifiMacAddress();
         if (Strings.isNullOrEmpty(mac)) {
             Log.e(TAG, "Failed to retrieve Wifi adapter MAC address");
-            sendLocalBroadcast(new Intent(GcmMessages.WS_REGISTRATION_FAILED));
+            sendLocalBroadcast(new Intent(GcmDiscoveryMessages.WS_REGISTRATION_FAILED));
             return;
         }
 
-        final String requestBody = new Gson().toJson(new MacRegisterRequest(mac, token));
+        final String requestBody = new Gson().toJson(new DiscoveryRegisterRequest(mac));
 
         GsonRequest<WsResponse> req = new GsonRequest<>(Request.Method.POST,
                 getString(R.string.register_api), WsResponse.class, requestBody,
@@ -92,16 +77,16 @@ public class RegistrationIntentService extends IntentService {
                         Log.d(TAG, "WS subscription finished=" + response.getStatus());
 
                         if (response.getStatus() == WsResponse.Status.success) {
-                            sendLocalBroadcast(new Intent(GcmMessages.WS_REGISTRATION_SUCCEEDED));
+                            sendLocalBroadcast(new Intent(GcmDiscoveryMessages.WS_REGISTRATION_SUCCEEDED));
                         } else {
-                            sendLocalBroadcast(new Intent(GcmMessages.WS_REGISTRATION_FAILED));
+                            sendLocalBroadcast(new Intent(GcmDiscoveryMessages.WS_REGISTRATION_FAILED));
                         }
                     }
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
                 Log.d(TAG, "WS subscription failed=" + error.getCause());
-                sendLocalBroadcast(new Intent(GcmMessages.WS_REGISTRATION_FAILED));
+                sendLocalBroadcast(new Intent(GcmDiscoveryMessages.WS_REGISTRATION_FAILED));
             }
         });
 
@@ -111,15 +96,15 @@ public class RegistrationIntentService extends IntentService {
     /**
      * Send message to web service in order to unregister
      */
-    private void unregisterFromServer() {
+    private void unregisterFromDiscoveryEvents() {
         final String mac = HwUtils.getWifiMacAddress();
         if (Strings.isNullOrEmpty(mac)) {
             Log.e(TAG, "Failed to retrieve Wifi adapter MAC address");
-            sendLocalBroadcast(new Intent(GcmMessages.WS_DEREGISTRATION_FAILED));
+            sendLocalBroadcast(new Intent(GcmDiscoveryMessages.WS_DEREGISTRATION_FAILED));
             return;
         }
 
-        final String requestBody = new Gson().toJson(new MacUnregisterRequest(mac));
+        final String requestBody = new Gson().toJson(new DiscoveryUnregisterRequest(mac));
 
         GsonRequest<WsResponse> req = new GsonRequest<>(Request.Method.POST,
                 getString(R.string.unregister_api), WsResponse.class, requestBody,
@@ -129,16 +114,16 @@ public class RegistrationIntentService extends IntentService {
                         Log.d(TAG, "WS unsubscription finished=" + response.getStatus());
 
                         if (response.getStatus() == WsResponse.Status.success) {
-                            sendLocalBroadcast(new Intent(GcmMessages.WS_DEREGISTRATION_SUCCEEDED));
+                            sendLocalBroadcast(new Intent(GcmDiscoveryMessages.WS_DEREGISTRATION_SUCCEEDED));
                         } else {
-                            sendLocalBroadcast(new Intent(GcmMessages.WS_DEREGISTRATION_FAILED));
+                            sendLocalBroadcast(new Intent(GcmDiscoveryMessages.WS_DEREGISTRATION_FAILED));
                         }
                     }
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
                 Log.d(TAG, "WS deregistration failed=" + error.getCause());
-                sendLocalBroadcast(new Intent(GcmMessages.WS_DEREGISTRATION_FAILED));
+                sendLocalBroadcast(new Intent(GcmDiscoveryMessages.WS_DEREGISTRATION_FAILED));
             }
         });
 

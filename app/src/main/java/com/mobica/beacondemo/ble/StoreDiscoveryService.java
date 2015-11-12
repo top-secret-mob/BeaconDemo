@@ -1,19 +1,11 @@
 package com.mobica.beacondemo.ble;
 
 import android.app.IntentService;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.media.RingtoneManager;
-import android.net.Uri;
-import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
-import com.mobica.beacondemo.BeaconApplication;
-import com.mobica.beacondemo.MainActivity;
-import com.mobica.beacondemo.R;
-import com.mobica.beacondemo.config.ConfigStorage;
+import com.mobica.discoverysdk.DiscoveryMode;
 
 public class StoreDiscoveryService extends IntentService {
     private static final String TAG = StoreDiscoveryService.class.getSimpleName();
@@ -29,6 +21,9 @@ public class StoreDiscoveryService extends IntentService {
      */
     private final static int STORE_EXIT_REQUEST = 9003;
 
+
+    private static Context context;
+
     public StoreDiscoveryService() {
         super(StoreDiscoveryService.class.getSimpleName());
     }
@@ -39,14 +34,14 @@ public class StoreDiscoveryService extends IntentService {
      * @param mode mode which triggered this event
      */
     public static void registerEntrance(DiscoveryMode mode) {
-        if (!ConfigStorage.isInStore.get()) {
-            ConfigStorage.isInStore.set(true);
+        if (/*!ConfigStorage.isInStore.get()*/false) {
+//            ConfigStorage.isInStore.set(true);
 
             Log.d(TAG, "Store entrance discovered: " + mode);
 
-            final Intent intent = new Intent(BeaconApplication.getAppContext(), StoreDiscoveryService.class);
+            final Intent intent = new Intent(context, StoreDiscoveryService.class);
             intent.setAction(ACTION_STORE_ENTRY);
-            BeaconApplication.getAppContext().startService(intent);
+            context.startService(intent);
         }
     }
 
@@ -56,14 +51,14 @@ public class StoreDiscoveryService extends IntentService {
      * @param mode mode which triggered this event
      */
     public static void registerExit(DiscoveryMode mode) {
-        if (ConfigStorage.isInStore.get()) {
-            ConfigStorage.isInStore.set(false);
+        if (/*ConfigStorage.isInStore.get()*/true) {
+//            ConfigStorage.isInStore.set(false);
 
             Log.d(TAG, "Store exit discovered: " + mode);
 
-            final Intent intent = new Intent(BeaconApplication.getAppContext(), StoreDiscoveryService.class);
+            final Intent intent = new Intent(context, StoreDiscoveryService.class);
             intent.setAction(ACTION_STORE_EXIT);
-            BeaconApplication.getAppContext().startService(intent);
+            context.startService(intent);
         }
     }
 
@@ -75,7 +70,7 @@ public class StoreDiscoveryService extends IntentService {
             BleAdapter.enableBle(this);
             sendEntranceNotification();
         } else if (ACTION_STORE_EXIT.equals(action)) {
-            if (!ConfigStorage.wasBleEnabled.get()) {
+            if (/*!ConfigStorage.wasBleEnabled.get()*/false) {
                 BleAdapter.disableBle(this);
             }
             sendExitNotification();
@@ -83,36 +78,36 @@ public class StoreDiscoveryService extends IntentService {
     }
 
     private void sendEntranceNotification() {
-        sendNotification(STORE_ENTRANCE_REQUEST, "Welcome to store",
-                "You've entered our store", R.drawable.ic_exit_to_app_white_24dp);
+//        sendNotification(STORE_ENTRANCE_REQUEST, "Welcome to store",
+//                "You've entered our store", R.drawable.ic_exit_to_app_white_24dp);
     }
 
     private void sendExitNotification() {
-        sendNotification(STORE_EXIT_REQUEST, "See you soon",
-                "Thank you for visiting our store", R.drawable.ic_exit_to_app_white_24dp);
+//        sendNotification(STORE_EXIT_REQUEST, "See you soon",
+//                "Thank you for visiting our store", R.drawable.ic_exit_to_app_white_24dp);
     }
 
     /**
      * Create and show a simple notification containing the received GCM message.
      */
     private void sendNotification(int requestCode, String title, String message, int iconResId) {
-        Intent intent = new Intent(this, MainActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, requestCode, intent,
-                PendingIntent.FLAG_ONE_SHOT);
-
-        Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this)
-                .setSmallIcon(iconResId)
-                .setContentTitle(title)
-                .setContentText(message)
-                .setAutoCancel(true)
-                .setSound(defaultSoundUri)
-                .setContentIntent(pendingIntent);
-
-        NotificationManager notificationManager =
-                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-
-        notificationManager.notify(NOTIFICATION_ID, notificationBuilder.build());
+//        Intent intent = new Intent(this, MainActivity.class);
+//        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+//        PendingIntent pendingIntent = PendingIntent.getActivity(this, requestCode, intent,
+//                PendingIntent.FLAG_ONE_SHOT);
+//
+//        Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+//        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this)
+//                .setSmallIcon(iconResId)
+//                .setContentTitle(title)
+//                .setContentText(message)
+//                .setAutoCancel(true)
+//                .setSound(defaultSoundUri)
+//                .setContentIntent(pendingIntent);
+//
+//        NotificationManager notificationManager =
+//                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+//
+//        notificationManager.notify(NOTIFICATION_ID, notificationBuilder.build());
     }
 }

@@ -3,6 +3,8 @@ package com.mobica.beacondemo.nfc;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.mobica.discoverysdk.nfc.NfcTag;
+
 /**
  * Represents NFC tag placed next to item in store
  */

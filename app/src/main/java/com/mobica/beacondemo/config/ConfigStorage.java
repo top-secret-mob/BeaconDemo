@@ -5,7 +5,7 @@ import android.preference.PreferenceManager;
 
 import com.google.common.collect.Sets;
 import com.mobica.beacondemo.BeaconApplication;
-import com.mobica.beacondemo.ble.DiscoveryMode;
+import com.mobica.discoverysdk.DiscoveryMode;
 
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -23,7 +23,7 @@ public class ConfigStorage {
     /**
      * Whether NFC mode is enabled for BLE switching
      */
-    public static IStore.Parameter<EnumSet<DiscoveryMode>> bleSwitchMode;
+    public static IStore.Parameter<EnumSet<DiscoveryMode>> bleSwitchModes;
     /**
      * Whether BLE auto switch is enabled
      */
@@ -60,7 +60,7 @@ public class ConfigStorage {
         mapping.put("1", DiscoveryMode.GEOFENCING);
         mapping.put("2", DiscoveryMode.WIFI_ACTIVE);
         mapping.put("3", DiscoveryMode.WIFI_PASSIVE);
-        bleSwitchMode = new EnumSetParam<>(sharedPreferencesStore, "bt_auto_switch_modes",
+        bleSwitchModes = new EnumSetParam<>(sharedPreferencesStore, "bt_auto_switch_modes",
                 EnumSet.noneOf(DiscoveryMode.class), DiscoveryMode.class, mapping);
         bleAutoModeEnabled = new BooleanParam(sharedPreferencesStore, "bt_auto_mode_switch", false);
     }
