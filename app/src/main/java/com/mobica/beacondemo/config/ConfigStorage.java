@@ -5,6 +5,7 @@ import android.preference.PreferenceManager;
 
 import com.google.common.collect.Sets;
 import com.mobica.beacondemo.BeaconApplication;
+import com.mobica.beacondemo.settings.Mapping;
 import com.mobica.discoverysdk.DiscoveryMode;
 
 import java.util.EnumSet;
@@ -54,14 +55,8 @@ public class ConfigStorage {
         isRegistered = new BooleanParam(memoryStore, "isRegisteredToWs", false);
         isInStore = new BooleanParam(memoryStore, "isInStore", false);
 
-        // persistent parameters
-        final Map<String, DiscoveryMode> mapping = new HashMap<>();
-        mapping.put("0", DiscoveryMode.NFC);
-        mapping.put("1", DiscoveryMode.GEOFENCING);
-        mapping.put("2", DiscoveryMode.WIFI_ACTIVE);
-        mapping.put("3", DiscoveryMode.WIFI_PASSIVE);
         bleSwitchModes = new EnumSetParam<>(sharedPreferencesStore, "bt_auto_switch_modes",
-                EnumSet.noneOf(DiscoveryMode.class), DiscoveryMode.class, mapping);
+                EnumSet.noneOf(DiscoveryMode.class), DiscoveryMode.class, Mapping.getDiscoveryModeValueMapping());
         bleAutoModeEnabled = new BooleanParam(sharedPreferencesStore, "bt_auto_mode_switch", false);
     }
 

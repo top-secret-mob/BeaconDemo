@@ -3,10 +3,12 @@ package com.mobica.beacondemo.dagger;
 import android.content.Context;
 
 import com.android.volley.RequestQueue;
-import com.mobica.beacondemo.SettingsActivity;
 import com.mobica.beacondemo.ble.DiscoveryManager;
-import com.mobica.beacondemo.gcm.RegistrationIntentService;
+import com.mobica.beacondemo.gcm.InstanceIdListenerService;
 import com.mobica.beacondemo.gcm.WsGcmListenerService;
+import com.mobica.beacondemo.registration.RegistrationProvider;
+import com.mobica.beacondemo.settings.BluetoothPreferenceFragment;
+import com.mobica.beacondemo.settings.SettingsActivity;
 import com.mobica.discoverysdk.gcm.GcmMessageProxy;
 
 import dagger.Module;
@@ -15,8 +17,9 @@ import dagger.Provides;
 /**
  * Dagger main module
  */
-@Module(injects = {Context.class, GcmMessageProxy.class, RequestQueue.class, RegistrationIntentService.class,
-        WsGcmListenerService.class, DiscoveryManager.class, SettingsActivity.class})
+@Module(injects = {Context.class, GcmMessageProxy.class, RequestQueue.class, InstanceIdListenerService.class,
+        WsGcmListenerService.class, DiscoveryManager.class, SettingsActivity.class, BluetoothPreferenceFragment.class,
+        RegistrationProvider.class})
 public class BeaconModule {
     private final Context appContext;
     private final RequestQueue requestQueue;

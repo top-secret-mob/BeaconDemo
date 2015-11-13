@@ -64,6 +64,7 @@ public class WifiScanner {
             context.unregisterReceiver(scanReceiver);
 
             scanningFuture.cancel(true);
+            scanningFuture = null;
         }
     }
 

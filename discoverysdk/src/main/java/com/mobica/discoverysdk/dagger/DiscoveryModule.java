@@ -8,7 +8,6 @@ import com.mobica.discoverysdk.geofence.GeoFencesFetcherFactory;
 import com.mobica.discoverysdk.geofence.GeofenceProvider;
 import com.mobica.discoverysdk.geofence.GoogleApiClientFactory;
 import com.mobica.discoverysdk.nfc.DiscoverActivity;
-import com.mobica.discoverysdk.wifi.ScannerClient;
 import com.mobica.discoverysdk.wifi.WifiScanner;
 
 import dagger.Module;

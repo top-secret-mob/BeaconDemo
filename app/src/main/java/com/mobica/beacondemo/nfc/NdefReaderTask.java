@@ -10,20 +10,26 @@ import android.util.Log;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.mobica.discoverysdk.nfc.NfcParserListener;
 import com.mobica.discoverysdk.nfc.NfcTag;
 
 import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-class NdefReaderTask extends AsyncTask<Tag, Void, NfcTag> {
+public class NdefReaderTask extends AsyncTask<Tag, Void, NfcTag> {
     private static final String TAG = NdefReaderTask.class.getSimpleName();
     // identifies store item (i.e. phone on a shelf)
     private static final Pattern ITEM_PATTERN = Pattern.compile("/*store/(\\w+)/item/(\\w+)");
-    private final NfcParserListener listener;
+    private final NfcReaderListener listener;
 
-    public NdefReaderTask(NfcParserListener listener) {
+    public interface NfcReaderListener {
+
+        void onNfcTagParsed(NfcTag tag);
+
+        void onNfcTagParsingFailed(String error);
+    }
+
+    public NdefReaderTask(NfcReaderListener listener) {
         Preconditions.checkNotNull(listener, "listener must not be null");
         this.listener = listener;
     }

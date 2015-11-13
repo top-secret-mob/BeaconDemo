@@ -1,13 +1,18 @@
 package com.mobica.beacondemo.gcm;
 
-import android.content.Intent;
-import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import com.google.android.gms.iid.InstanceIDListenerService;
+import com.mobica.beacondemo.registration.RegistrationProvider;
 
-public class InstanceIdListenerService extends InstanceIDListenerService {
+import javax.inject.Inject;
+
+public class InstanceIdListenerService extends InstanceIDListenerService implements
+        RegistrationProvider.RegistrationProviderListener {
     private static final String TAG = InstanceIdListenerService.class.getSimpleName();
+
+    @Inject
+    RegistrationProvider registrationProvider;
 
     public InstanceIdListenerService() {
     }
@@ -16,6 +21,17 @@ public class InstanceIdListenerService extends InstanceIDListenerService {
     public void onTokenRefresh() {
         super.onTokenRefresh();
         Log.d(TAG, "Gcm token refreshed");
-        LocalBroadcastManager.getInstance(this).sendBroadcast(new Intent(GcmMessages.GCM_TOKEN_REFRESHED));
+        TokenStore.updateToken(this);
+        registrationProvider.login(this);
+    }
+
+    @Override
+    public void onOperationSucceeded() {
+        Log.d(TAG, "Token refresh succeeded");
+    }
+
+    @Override
+    public void onOperationFailed(String error) {
+        Log.d(TAG, "Token refresh failed: " + error);
     }
 }

@@ -1,4 +1,4 @@
-package com.mobica.beacondemo;
+package com.mobica.beacondemo.settings;
 
 
 import android.annotation.TargetApi;
@@ -12,10 +12,11 @@ import android.preference.MultiSelectListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
-import android.preference.SwitchPreference;
 import android.support.v7.app.ActionBar;
-import android.view.MenuItem;
 
+import com.mobica.beacondemo.AppCompatPreferenceActivity;
+import com.mobica.beacondemo.BeaconApplication;
+import com.mobica.beacondemo.R;
 import com.mobica.beacondemo.ble.DiscoveryManager;
 
 import java.util.HashSet;
@@ -153,57 +154,5 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     protected boolean isValidFragment(String fragmentName) {
         return PreferenceFragment.class.getName().equals(fragmentName)
                 || BluetoothPreferenceFragment.class.getName().equals(fragmentName);
-    }
-
-    /**
-     * This fragment shows bluetooth preferences
-     */
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    public static class BluetoothPreferenceFragment extends PreferenceFragment {
-
-
-        private SwitchPreference autoSwitchModeSwitch;
-        private MultiSelectListPreference autoSwitchModes;
-
-        @Override
-        public void onCreate(Bundle savedInstanceState) {
-            super.onCreate(savedInstanceState);
-            addPreferencesFromResource(R.xml.pref_bluetooth);
-            setHasOptionsMenu(true);
-
-            autoSwitchModeSwitch = (SwitchPreference) findPreference("bt_auto_mode_switch");
-            autoSwitchModes = (MultiSelectListPreference) findPreference("bt_auto_switch_modes");
-            bindPreferenceSummaryToValue(autoSwitchModes);
-
-            bindSwitchWithList();
-        }
-
-        @Override
-        public boolean onOptionsItemSelected(MenuItem item) {
-            int id = item.getItemId();
-            if (id == android.R.id.home) {
-                getActivity().onBackPressed();
-                return true;
-            }
-            return super.onOptionsItemSelected(item);
-        }
-
-        private void bindSwitchWithList() {
-            autoSwitchModeSwitch.setOnPreferenceChangeListener(bindAutoSwitchWithModeList);
-            bindAutoSwitchWithModeList.onPreferenceChange(autoSwitchModeSwitch,
-                    PreferenceManager.getDefaultSharedPreferences(getActivity())
-                            .getBoolean(autoSwitchModeSwitch.getKey(), false));
-        }
-
-        private final Preference.OnPreferenceChangeListener bindAutoSwitchWithModeList =
-                new Preference.OnPreferenceChangeListener() {
-                    @Override
-                    public boolean onPreferenceChange(Preference preference, Object o) {
-                        final boolean on = (Boolean) o;
-                        autoSwitchModes.setEnabled(on);
-
-                        return true;
-                    }
-                };
     }
 }
