@@ -1,4 +1,4 @@
-package com.mobica.beacondemo.registration;
+package com.mobica.beacondemo.repository;
 
 import android.content.Context;
 import android.util.Log;
@@ -8,6 +8,7 @@ import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.google.common.base.Strings;
+import com.google.common.util.concurrent.SettableFuture;
 import com.google.gson.Gson;
 import com.mobica.beacondemo.R;
 import com.mobica.beacondemo.gcm.TokenStore;
@@ -32,21 +33,15 @@ public class RegistrationProvider {
     @Inject
     RequestQueue requestQueue;
 
-    public interface RegistrationProviderListener {
-        void onOperationSucceeded();
-
-        void onOperationFailed(String error);
-    }
-
-    public void login(final RegistrationProviderListener listener) {
+    public void login() throws Exception {
         final String mac = HwUtils.getWifiMacAddress();
         if (Strings.isNullOrEmpty(mac)) {
             Log.e(TAG, "Failed to retrieve Wifi adapter MAC address");
-            listener.onOperationFailed("Wifi adapter MAC address retrieving failed");
-            return;
+            throw new RuntimeException("Wifi adapter MAC address retrieving failed");
         }
 
-        final String requestBody = new Gson().toJson(new MacRegisterRequest(mac, TokenStore.token));
+        final SettableFuture<Void> result = SettableFuture.create();
+        final String requestBody = new Gson().toJson(new MacRegisterRequest(mac, TokenStore.getToken(context)));
 
         GsonRequest<WsResponse> req = new GsonRequest<>(Request.Method.POST,
                 context.getString(R.string.login_api), WsResponse.class, requestBody,
@@ -56,31 +51,32 @@ public class RegistrationProvider {
                         Log.d(TAG, "WS login finished=" + response.getStatus());
 
                         if (response.getStatus() == WsResponse.Status.success) {
-                            listener.onOperationSucceeded();
+                            result.set(null);
                         } else {
-                            listener.onOperationFailed(response.getError());
+                            result.setException(new RuntimeException(response.getError()));
                         }
                     }
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
                 Log.d(TAG, "WS login failed=" + error.getCause());
-                listener.onOperationFailed(error.getMessage());
+                result.setException(new RuntimeException(error.getMessage()));
             }
         });
 
         req.setTag(TAG);
         requestQueue.add(req);
+        result.get();
     }
 
-    public void logout(final RegistrationProviderListener listener) {
+    public void logout() throws Exception {
         final String mac = HwUtils.getWifiMacAddress();
         if (Strings.isNullOrEmpty(mac)) {
             Log.e(TAG, "Failed to retrieve Wifi adapter MAC address");
-            listener.onOperationFailed("Wifi adapter MAC address retrieving failed");
-            return;
+            throw new RuntimeException("Wifi adapter MAC address retrieving failed");
         }
 
+        final SettableFuture<Void> result = SettableFuture.create();
         final String requestBody = new Gson().toJson(new MacUnregisterRequest(mac));
 
         GsonRequest<WsResponse> req = new GsonRequest<>(Request.Method.POST,
@@ -91,21 +87,22 @@ public class RegistrationProvider {
                         Log.d(TAG, "WS logout finished=" + response.getStatus());
 
                         if (response.getStatus() == WsResponse.Status.success) {
-                            listener.onOperationSucceeded();
+                            result.set(null);
                         } else {
-                            listener.onOperationFailed(response.getError());
+                            result.setException(new RuntimeException(response.getError()));
                         }
                     }
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
                 Log.d(TAG, "WS logout failed=" + error.getCause());
-                listener.onOperationFailed(error.getMessage());
+                result.setException(new RuntimeException(error.getMessage()));
             }
         });
 
         req.setTag(TAG);
         requestQueue.add(req);
+        result.get();
     }
 
     public void cancel() {

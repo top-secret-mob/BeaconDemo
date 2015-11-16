@@ -8,15 +8,26 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.ProgressBar;
 
-import com.mobica.beacondemo.registration.RegistrationProvider;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.mobica.beacondemo.ble.DiscoveryManager;
+import com.mobica.beacondemo.config.ConfigStorage;
+import com.mobica.beacondemo.repository.RepositoryServiceAdapter;
+import com.mobica.beacondemo.utils.FluentExecutors;
+
+import java.util.concurrent.Executors;
 
 import javax.inject.Inject;
 
-public class SplashScreen extends AppCompatActivity implements RegistrationProvider.RegistrationProviderListener {
+public class SplashScreen extends AppCompatActivity {
     private ProgressBar progressBar;
+    private ListenableFuture<Void> loginFuture;
 
     @Inject
-    RegistrationProvider registrationProvider;
+    RepositoryServiceAdapter repositoryService;
+    @Inject
+    DiscoveryManager discoveryManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,34 +41,40 @@ public class SplashScreen extends AppCompatActivity implements RegistrationProvi
     @Override
     protected void onResume() {
         super.onResume();
-        registrationProvider.login(this);
+        loginFuture = repositoryService.login();
+        Futures.addCallback(loginFuture, loginCallback, FluentExecutors.mainThreadExecutor());
         progressBar.setVisibility(View.VISIBLE);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        registrationProvider.cancel();
+        if (loginFuture != null) {
+            loginFuture.cancel(true);
+        }
         progressBar.setVisibility(View.GONE);
     }
 
-    @Override
-    public void onOperationSucceeded() {
-        startActivity(new Intent(this, MainActivity.class));
-        finish();
-    }
+    private final FutureCallback<Void> loginCallback = new FutureCallback<Void>() {
+        @Override
+        public void onSuccess(Void result) {
+            discoveryManager.updateModes(ConfigStorage.bleSwitchModes.get());
+            startActivity(new Intent(SplashScreen.this, MainActivity.class));
+            finish();
+        }
 
-    @Override
-    public void onOperationFailed(String error) {
-        new AlertDialog.Builder(this)
-                .setTitle("Registration failed")
-                .setMessage(error)
-                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        finish();
-                    }
-                })
-                .show();
-    }
+        @Override
+        public void onFailure(Throwable t) {
+            new AlertDialog.Builder(SplashScreen.this)
+                    .setTitle("Registration failed")
+                    .setMessage(t.getMessage())
+                    .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            finish();
+                        }
+                    })
+                    .show();
+        }
+    };
 }

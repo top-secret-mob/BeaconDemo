@@ -12,9 +12,9 @@ import java.io.IOException;
  * Created by wojtek on 22.10.15.
  */
 public class TokenStore {
-    public static String token;
+    private static String token;
 
-    public static void updateToken(Context context) {
+    public static synchronized void updateToken(Context context) {
         try {
             // Initially this call goes out to the network to retrieve the token, subsequent calls
             // are local.
@@ -23,5 +23,12 @@ public class TokenStore {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public static synchronized String getToken(Context context) {
+        if (token == null) {
+            updateToken(context);
+        }
+        return token;
     }
 }

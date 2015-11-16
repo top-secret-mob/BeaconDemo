@@ -84,6 +84,11 @@
             android:name="com.mobica.discoverysdk.nfc.NfcDiscoverService"
             android:exported="false" >
         </service>
+        <service
+            android:name=".repository.RepositoryService"
+            android:enabled="true"
+            android:exported="false" >
+        </service>
     </application>
 
 </manifest>

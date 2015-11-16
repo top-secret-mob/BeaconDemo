@@ -7,7 +7,9 @@ import com.mobica.beacondemo.SplashScreen;
 import com.mobica.beacondemo.ble.DiscoveryManager;
 import com.mobica.beacondemo.gcm.InstanceIdListenerService;
 import com.mobica.beacondemo.gcm.WsGcmListenerService;
-import com.mobica.beacondemo.registration.RegistrationProvider;
+import com.mobica.beacondemo.repository.RegistrationProvider;
+import com.mobica.beacondemo.repository.RepositoryService;
+import com.mobica.beacondemo.repository.RepositoryServiceAdapter;
 import com.mobica.beacondemo.settings.BluetoothPreferenceFragment;
 import com.mobica.beacondemo.settings.SettingsActivity;
 import com.mobica.discoverysdk.gcm.GcmMessageProxy;
@@ -20,7 +22,7 @@ import dagger.Provides;
  */
 @Module(injects = {Context.class, GcmMessageProxy.class, RequestQueue.class, InstanceIdListenerService.class,
         WsGcmListenerService.class, DiscoveryManager.class, SettingsActivity.class, BluetoothPreferenceFragment.class,
-        RegistrationProvider.class, SplashScreen.class})
+        RegistrationProvider.class, SplashScreen.class, RepositoryServiceAdapter.class, RepositoryService.class})
 public class BeaconModule {
     private final Context appContext;
     private final RequestQueue requestQueue;

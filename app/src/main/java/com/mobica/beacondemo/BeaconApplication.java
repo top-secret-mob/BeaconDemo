@@ -9,6 +9,7 @@ import com.mobica.beacondemo.ble.BleAdapter;
 import com.mobica.beacondemo.ble.DiscoveryManager;
 import com.mobica.beacondemo.config.ConfigStorage;
 import com.mobica.beacondemo.dagger.BeaconModule;
+import com.mobica.beacondemo.repository.RepositoryServiceAdapter;
 import com.mobica.discoverysdk.DiscoverySdk;
 
 import dagger.ObjectGraph;
@@ -34,6 +35,8 @@ public class BeaconApplication extends Application {
 
         ConfigStorage.setup();
         ConfigStorage.wasBleEnabled.set(BleAdapter.isBleEnabled(this));
+
+        graph.get(RepositoryServiceAdapter.class).connect(this);
 
         final DiscoveryManager discoveryManager = graph.get(DiscoveryManager.class);
         discoveryManager.updateModes(ConfigStorage.bleSwitchModes.get());
