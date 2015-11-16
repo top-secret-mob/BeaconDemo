@@ -9,7 +9,6 @@ import com.mobica.beacondemo.settings.Mapping;
 import com.mobica.discoverysdk.DiscoveryMode;
 
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -37,10 +36,6 @@ public class ConfigStorage {
      * Whether registration to web service is complete
      */
     public static IStore.Parameter<Boolean> isRegistered;
-    /**
-     * Whether user is currently in store
-     */
-    public static IStore.Parameter<Boolean> isInStore;
 
     public static void setup() {
         final SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(
@@ -52,12 +47,12 @@ public class ConfigStorage {
         // volatile parameters
         wasBleEnabled = new BooleanParam(memoryStore, "wasBleEnabled", false);
         registrationPerformed = new BooleanParam(memoryStore, "registrationPerformed", false);
-        isRegistered = new BooleanParam(memoryStore, "isRegisteredToWs", false);
-        isInStore = new BooleanParam(memoryStore, "isInStore", false);
 
+        // persistent parameters
         bleSwitchModes = new EnumSetParam<>(sharedPreferencesStore, "bt_auto_switch_modes",
                 EnumSet.noneOf(DiscoveryMode.class), DiscoveryMode.class, Mapping.getDiscoveryModeValueMapping());
         bleAutoModeEnabled = new BooleanParam(sharedPreferencesStore, "bt_auto_mode_switch", false);
+        isRegistered = new BooleanParam(sharedPreferencesStore, "isRegisteredToWs", false);
     }
 
     /**

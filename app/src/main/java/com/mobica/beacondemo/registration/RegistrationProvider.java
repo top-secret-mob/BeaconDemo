@@ -18,10 +18,12 @@ import com.mobica.discoverysdk.utils.HwUtils;
 import com.mobica.discoverysdk.volley.GsonRequest;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 /**
  * Created by woos on 2015-11-13.
  */
+@Singleton
 public class RegistrationProvider {
     private static final String TAG = RegistrationProvider.class.getSimpleName();
 
@@ -47,7 +49,7 @@ public class RegistrationProvider {
         final String requestBody = new Gson().toJson(new MacRegisterRequest(mac, TokenStore.token));
 
         GsonRequest<WsResponse> req = new GsonRequest<>(Request.Method.POST,
-                context.getString(R.string.register_api), WsResponse.class, requestBody,
+                context.getString(R.string.login_api), WsResponse.class, requestBody,
                 new Response.Listener<WsResponse>() {
                     @Override
                     public void onResponse(WsResponse response) {
@@ -67,6 +69,7 @@ public class RegistrationProvider {
             }
         });
 
+        req.setTag(TAG);
         requestQueue.add(req);
     }
 
@@ -81,7 +84,7 @@ public class RegistrationProvider {
         final String requestBody = new Gson().toJson(new MacUnregisterRequest(mac));
 
         GsonRequest<WsResponse> req = new GsonRequest<>(Request.Method.POST,
-                context.getString(R.string.unregister_api), WsResponse.class, requestBody,
+                context.getString(R.string.logout_api), WsResponse.class, requestBody,
                 new Response.Listener<WsResponse>() {
                     @Override
                     public void onResponse(WsResponse response) {
@@ -101,6 +104,11 @@ public class RegistrationProvider {
             }
         });
 
+        req.setTag(TAG);
         requestQueue.add(req);
+    }
+
+    public void cancel() {
+        requestQueue.cancelAll(TAG);
     }
 }

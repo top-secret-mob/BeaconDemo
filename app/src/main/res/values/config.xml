@@ -3,6 +3,8 @@
     <!-- strings -->
     <string name="project_id">123</string>
     <string name="wifi_ssid_pattern">nok10</string>
+    <string name="login_api">http://89.174.7.92:50650/account/login</string>
+    <string name="logout_api">http://89.174.7.92:50650/account/logout</string>
 
     <!-- integers -->
     <integer name="wifi_scanning_rate">15</integer>

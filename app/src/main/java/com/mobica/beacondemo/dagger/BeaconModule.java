@@ -3,6 +3,7 @@ package com.mobica.beacondemo.dagger;
 import android.content.Context;
 
 import com.android.volley.RequestQueue;
+import com.mobica.beacondemo.SplashScreen;
 import com.mobica.beacondemo.ble.DiscoveryManager;
 import com.mobica.beacondemo.gcm.InstanceIdListenerService;
 import com.mobica.beacondemo.gcm.WsGcmListenerService;
@@ -19,7 +20,7 @@ import dagger.Provides;
  */
 @Module(injects = {Context.class, GcmMessageProxy.class, RequestQueue.class, InstanceIdListenerService.class,
         WsGcmListenerService.class, DiscoveryManager.class, SettingsActivity.class, BluetoothPreferenceFragment.class,
-        RegistrationProvider.class})
+        RegistrationProvider.class, SplashScreen.class})
 public class BeaconModule {
     private final Context appContext;
     private final RequestQueue requestQueue;
