@@ -85,8 +85,7 @@
             android:exported="false" >
         </service>
         <service
-            android:name=".repository.RepositoryService"
-            android:enabled="true"
+            android:name="com.mobica.repositorysdk.service.RepositoryService"
             android:exported="false" >
         </service>
     </application>

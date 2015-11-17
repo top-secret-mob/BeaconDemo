@@ -1,1 +1,1 @@
-include ':app', ':discoverysdk'
+include ':app', ':discoverysdk', ':repositorysdk'

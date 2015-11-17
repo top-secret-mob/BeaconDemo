@@ -4,7 +4,7 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 
-import com.mobica.discoverysdk.gcm.GcmMessageProxy;
+import com.mobica.discoverysdk.dagger.Graphs;
 import com.mobica.discoverysdk.geofence.GeofenceProvider;
 import com.mobica.discoverysdk.nfc.NfcController;
 import com.mobica.discoverysdk.wifi.ScannerClient;
@@ -20,15 +20,19 @@ public class DiscoveryClient implements NfcController.NfcDiscoveryListener, Wifi
         ScannerClient.ScannerClientListener, ScannerClient.ScannerClientRegistrationListener,
         GeofenceProvider.GeofenceProviderListener {
     private final Handler handler = new Handler(Looper.getMainLooper());
+    private final ScannerClient scannerClient;
     private final NfcController nfcController;
     private final WifiScanner wifiScanner;
-    private final ScannerClient scannerClient;
     private final GeofenceProvider geofenceProvider;
     private DiscoveryClientListener clientListener;
     private DiscoveryConnectionListener connectionListener;
     private final AtomicInteger ssidCounter = new AtomicInteger();
+    private final EnumSet<DiscoveryMode> modes;
 
-    private DiscoveryClient(Builder builder) {
+    private DiscoveryClient(Builder builder, ScannerClient scannerClient) {
+        this.scannerClient = scannerClient;
+        modes = builder.modes.clone();
+
         if (builder.modes.contains(DiscoveryMode.NFC)) {
             nfcController = new NfcController(builder.context, this);
         } else {
@@ -36,16 +40,10 @@ public class DiscoveryClient implements NfcController.NfcDiscoveryListener, Wifi
         }
 
         if (builder.modes.contains(DiscoveryMode.WIFI_ACTIVE)) {
-            wifiScanner = new WifiScanner(builder.context, this, builder.ssidPattern,
+            wifiScanner = new WifiScanner(builder.context, this,
                     builder.wifiScanningFrequency, builder.wifiOutOfRangeTimeout);
         } else {
             wifiScanner = null;
-        }
-
-        if (builder.modes.contains(DiscoveryMode.WIFI_PASSIVE)) {
-            scannerClient = new ScannerClient(builder.context, builder.gcmProxy, this, this);
-        } else {
-            scannerClient = null;
         }
 
         if (builder.modes.contains(DiscoveryMode.GEOFENCING)) {
@@ -75,8 +73,8 @@ public class DiscoveryClient implements NfcController.NfcDiscoveryListener, Wifi
             }
         }
 
-        if (scannerClient != null) {
-            scannerClient.register();
+        if (modes.contains(DiscoveryMode.WIFI_PASSIVE)) {
+            scannerClient.register(this, this);
         }
 
         if (geofenceProvider != null) {
@@ -93,8 +91,8 @@ public class DiscoveryClient implements NfcController.NfcDiscoveryListener, Wifi
             wifiScanner.stopScanner();
         }
 
-        if (scannerClient != null) {
-            scannerClient.unregister();
+        if (modes.contains(DiscoveryMode.WIFI_PASSIVE)) {
+            scannerClient.unregister(this);
         }
 
         if (geofenceProvider != null) {
@@ -231,15 +229,12 @@ public class DiscoveryClient implements NfcController.NfcDiscoveryListener, Wifi
         private DiscoveryConnectionListener connectionListener;
         private long wifiScanningFrequency;
         private long wifiOutOfRangeTimeout;
-        private String ssidPattern;
-        private GcmMessageProxy gcmProxy;
 
         public Builder(Context context) {
             this.context = context;
 
             this.wifiScanningFrequency = context.getResources().getInteger(R.integer.wifi_default_scanning_rate);
             this.wifiOutOfRangeTimeout = context.getResources().getInteger(R.integer.wifi_default_lost_timeout);
-            this.ssidPattern = context.getString(R.string.wifi_ssid_pattern);
         }
 
         public Builder addDiscoveryMode(DiscoveryMode mode) {
@@ -257,11 +252,6 @@ public class DiscoveryClient implements NfcController.NfcDiscoveryListener, Wifi
             return this;
         }
 
-        public Builder setWifiSsidPattern(String ssidPattern) {
-            this.ssidPattern = ssidPattern;
-            return this;
-        }
-
         public Builder setDiscoveryListener(DiscoveryClientListener clientListener) {
             this.clientListener = clientListener;
             return this;
@@ -272,17 +262,8 @@ public class DiscoveryClient implements NfcController.NfcDiscoveryListener, Wifi
             return this;
         }
 
-        public Builder setGcmProxy(GcmMessageProxy gcmProxy) {
-            this.gcmProxy = gcmProxy;
-            return this;
-        }
-
         public DiscoveryClient build() {
-            if (modes.contains(DiscoveryMode.WIFI_PASSIVE) && gcmProxy == null) {
-                throw new IllegalArgumentException("GCM proxy must be specified for " + DiscoveryMode.WIFI_PASSIVE);
-            }
-
-            return new DiscoveryClient(this);
+            return new DiscoveryClient(this, Graphs.get(ScannerClient.class));
         }
     }
 }

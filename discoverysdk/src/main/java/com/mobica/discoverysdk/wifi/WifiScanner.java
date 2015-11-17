@@ -8,6 +8,8 @@ import android.location.LocationManager;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 
+import com.mobica.discoverysdk.R;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,11 +32,10 @@ public class WifiScanner {
     private Context context;
     private ScheduledFuture<?> scanningFuture = null;
 
-    public WifiScanner(Context context, WifiScannerListener listener, String ssidPattern,
-                       long scanningFrequency, long outOfRangeTimeout) {
+    public WifiScanner(Context context, WifiScannerListener listener, long scanningFrequency, long outOfRangeTimeout) {
         this.context = context;
         this.listener = listener;
-        this.ssidPattern = ssidPattern.toLowerCase();
+        this.ssidPattern = context.getString(R.string.wifi_ssid_pattern);
         this.scanningFrequency = scanningFrequency;
         this.outOfRangeTimeout = TimeUnit.SECONDS.toMillis(outOfRangeTimeout);
         wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);

@@ -3,14 +3,14 @@ package com.mobica.beacondemo;
 import android.app.Application;
 import android.content.Context;
 
-import com.android.volley.RequestQueue;
-import com.android.volley.toolbox.Volley;
 import com.mobica.beacondemo.ble.BleAdapter;
-import com.mobica.beacondemo.ble.DiscoveryManager;
 import com.mobica.beacondemo.config.ConfigStorage;
 import com.mobica.beacondemo.dagger.BeaconModule;
-import com.mobica.beacondemo.repository.RepositoryServiceAdapter;
-import com.mobica.discoverysdk.DiscoverySdk;
+import com.mobica.beacondemo.location.LocationProvider;
+import com.mobica.beacondemo.utils.Credentials;
+import com.mobica.discoverysdk.dagger.DiscoveryModule;
+import com.mobica.repositorysdk.RepositoryServiceAdapter;
+import com.mobica.repositorysdk.dagger.RepositoryModule;
 
 import dagger.ObjectGraph;
 
@@ -27,16 +27,21 @@ public class BeaconApplication extends Application {
         BeaconApplication.applicationContext = this;
 
         // initialize dagger
-        BeaconApplication.graph = ObjectGraph.create(new BeaconModule(this, Volley.newRequestQueue(this)));
+        BeaconApplication.graph = ObjectGraph.create(new BeaconModule(this),
+                new DiscoveryModule(new LocationProvider()), new RepositoryModule(this, new Credentials()));
 
+        // initialize repository sdk
+        com.mobica.repositorysdk.dagger.Graphs.init(graph);
         // initialize discovery sdk
-        DiscoverySdk.init(this, graph.get(RequestQueue.class));
+        com.mobica.discoverysdk.dagger.Graphs.init(graph);
 
 
         ConfigStorage.setup();
         ConfigStorage.wasBleEnabled.set(BleAdapter.isBleEnabled(this));
 
-        graph.get(RepositoryServiceAdapter.class).connect(this);
+        final RepositoryServiceAdapter repositoryServiceAdapter = graph.get(RepositoryServiceAdapter.class);
+        repositoryServiceAdapter.connect(this);
+        repositoryServiceAdapter.login();
 
         final DiscoveryManager discoveryManager = graph.get(DiscoveryManager.class);
         discoveryManager.updateModes(ConfigStorage.bleSwitchModes.get());

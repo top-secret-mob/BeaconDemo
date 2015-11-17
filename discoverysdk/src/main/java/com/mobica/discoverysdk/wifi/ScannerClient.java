@@ -1,23 +1,24 @@
 package com.mobica.discoverysdk.wifi;
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
-import com.mobica.discoverysdk.gcm.DiscoveryRegistrationIntentService;
-import com.mobica.discoverysdk.gcm.GcmDiscoveryMessages;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.mobica.discoverysdk.gcm.GcmMessageListener;
 import com.mobica.discoverysdk.gcm.GcmMessageProxy;
+import com.mobica.repositorysdk.RepositoryServiceAdapter;
+import com.mobica.repositorysdk.utils.FluentExecutors;
 
-import javax.inject.Singleton;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+
+import javax.inject.Inject;
 
 /**
  * WIFI passive scanner client
  */
-@Singleton
 public class ScannerClient {
     private static final String TAG = ScannerClient.class.getSimpleName();
     // GCM message identifier
@@ -28,13 +29,6 @@ public class ScannerClient {
     private static final String PARAM_STATUS_CHANGE = "status_change";
     // GCM message that updates device discovery status
     private static final String TYPE_DISCOVERY_STATUS = "discovery_status";
-
-    public enum State {
-        UNREGISTERED,
-        REGISTERING,
-        REGISTERED,
-        DEREGISTERING
-    }
 
     public interface ScannerClientListener {
         void onClientSignalDiscovered();
@@ -48,48 +42,68 @@ public class ScannerClient {
         void onClientRegistrationFailed(String error);
     }
 
-    private State state = State.UNREGISTERED;
-    private final Context context;
-    private final GcmMessageProxy proxy;
-    private final ScannerClientListener listener;
-    private final ScannerClientRegistrationListener registrationListener;
+    private final List<ScannerClientListener> detectionListeners = new CopyOnWriteArrayList<>();
+    private ListenableFuture<Void> registerFuture;
+    private ListenableFuture<Void> unregisterFuture;
 
-    public ScannerClient(Context context, GcmMessageProxy proxy,
-                         ScannerClientListener listener, ScannerClientRegistrationListener registrationListener) {
-        this.context = context;
-        this.proxy = proxy;
-        this.listener = listener;
-        this.registrationListener = registrationListener;
-    }
+    @Inject
+    RepositoryServiceAdapter repositoryAdapter;
+    @Inject
+    GcmMessageProxy proxy;
 
-    public synchronized void register() {
-        if (state == State.UNREGISTERED) {
-            state = State.REGISTERING;
+    public synchronized void register(final ScannerClientRegistrationListener registrationListener,
+                                      final ScannerClientListener detectionListener) {
+        if (registerFuture == null) {
+            unregisterFuture = null;
+            registerFuture = repositoryAdapter.registerForDiscoveryEvents();
+            Futures.addCallback(registerFuture, new FutureCallback<Void>() {
+                @Override
+                public void onSuccess(Void result) {
+                    Log.d(TAG, "Scanner client registered");
+                    proxy.registerListener(gcmListener);
+                }
 
-            LocalBroadcastManager.getInstance(context).registerReceiver(localReceiver,
-                    GcmDiscoveryMessages.getIntentFilter());
-            final Intent intent = new Intent(context, DiscoveryRegistrationIntentService.class);
-            intent.setAction(DiscoveryRegistrationIntentService.ACTION_REGISTER);
-            context.startService(intent);
+                @Override
+                public void onFailure(Throwable t) {
+                    Log.d(TAG, "Scanner client registration failed");
+                }
+            }, FluentExecutors.mainThreadExecutor());
         }
+
+        Futures.addCallback(registerFuture, new FutureCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                registrationListener.onClientRegistered();
+                detectionListeners.add(detectionListener);
+            }
+
+            @Override
+            public void onFailure(Throwable t) {
+                registrationListener.onClientRegistrationFailed("Failed to register for discovery events");
+            }
+        }, FluentExecutors.mainThreadExecutor());
     }
 
-    public synchronized void unregister() {
-        if (state == State.REGISTERED) {
-            state = State.DEREGISTERING;
+    public synchronized void unregister(final ScannerClientListener detectionListener) {
+        detectionListeners.remove(detectionListener);
 
-            final Intent intent = new Intent(context, DiscoveryRegistrationIntentService.class);
-            intent.setAction(DiscoveryRegistrationIntentService.ACTION_UNREGISTER);
-            context.startService(intent);
+        if (detectionListeners.isEmpty() && unregisterFuture == null && registerFuture != null) {
+            registerFuture = null;
+            unregisterFuture = repositoryAdapter.registerForDiscoveryEvents();
+            Futures.addCallback(unregisterFuture, new FutureCallback<Void>() {
+                @Override
+                public void onSuccess(Void result) {
+                    Log.d(TAG, "Scanner client unregistered");
+                    proxy.unregisterListener(gcmListener);
+                }
+
+                @Override
+                public void onFailure(Throwable t) {
+                    Log.d(TAG, "Scanner client deregistration failed");
+                    proxy.unregisterListener(gcmListener);
+                }
+            }, FluentExecutors.mainThreadExecutor());
         }
-    }
-
-    public synchronized State getState() {
-        return state;
-    }
-
-    private synchronized void setState(State state) {
-        this.state = state;
     }
 
     private final GcmMessageListener gcmListener = new GcmMessageListener() {
@@ -112,41 +126,22 @@ public class ScannerClient {
          * @param data message body
          */
         private void processDiscoveryStatusMessage(Bundle data) {
+            if (detectionListeners.isEmpty()) {
+                return;
+            }
+
             final boolean enabled = data != null && data.getString(PARAM_IN_RANGE, "false").equals("true");
             final boolean statusChanged = data != null && data.getString(PARAM_STATUS_CHANGE, "false").equals("true");
 
             // show notification only when status changes or if registered when user was already in store
             if (statusChanged || enabled) {
-                if (enabled) {
-                    listener.onClientSignalDiscovered();
-                } else {
-                    listener.onClientSignalLost();
+                for (ScannerClientListener listener : detectionListeners) {
+                    if (enabled) {
+                        listener.onClientSignalDiscovered();
+                    } else {
+                        listener.onClientSignalLost();
+                    }
                 }
-            }
-        }
-    };
-
-    private final BroadcastReceiver localReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            final String action = intent.getAction();
-            if (GcmDiscoveryMessages.WS_REGISTRATION_SUCCEEDED.equals(action)) {
-                Log.d(TAG, "Scanner client registered");
-                setState(State.REGISTERED);
-                proxy.registerListener(gcmListener);
-                registrationListener.onClientRegistered();
-            } else if (GcmDiscoveryMessages.WS_REGISTRATION_FAILED.equals(action)) {
-                Log.d(TAG, "Scanner client registration failed");
-                setState(State.UNREGISTERED);
-                registrationListener.onClientRegistrationFailed("Failed to register for discovery events");
-            } else if (GcmDiscoveryMessages.WS_DEREGISTRATION_SUCCEEDED.equals(action)) {
-                Log.d(TAG, "Scanner client unregistered");
-                setState(State.UNREGISTERED);
-                proxy.unregisterListener(gcmListener);
-            } else if (GcmDiscoveryMessages.WS_DEREGISTRATION_FAILED.equals(action)) {
-                Log.d(TAG, "Scanner client deregistration failed");
-                setState(State.REGISTERED);
-                proxy.unregisterListener(gcmListener);
             }
         }
     };

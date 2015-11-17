@@ -17,7 +17,7 @@ import android.support.v7.app.ActionBar;
 import com.mobica.beacondemo.AppCompatPreferenceActivity;
 import com.mobica.beacondemo.BeaconApplication;
 import com.mobica.beacondemo.R;
-import com.mobica.beacondemo.ble.DiscoveryManager;
+import com.mobica.beacondemo.DiscoveryManager;
 
 import java.util.HashSet;
 import java.util.List;

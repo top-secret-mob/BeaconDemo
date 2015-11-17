@@ -8,11 +8,15 @@ import dagger.ObjectGraph;
 public class Graphs {
     private static ObjectGraph graph;
 
-    public static void init(Object module) {
-        Graphs.graph = ObjectGraph.create(module);
+    public static void init(ObjectGraph graph) {
+        Graphs.graph = graph;
     }
 
     public static <T> T inject(T injectable) {
         return graph.inject(injectable);
+    }
+
+    public static <T> T get(Class<T> type) {
+        return graph.get(type);
     }
 }

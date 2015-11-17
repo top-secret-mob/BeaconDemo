@@ -4,7 +4,7 @@ import android.util.Log;
 
 import com.google.android.gms.iid.InstanceIDListenerService;
 import com.mobica.beacondemo.BeaconApplication;
-import com.mobica.beacondemo.repository.RepositoryServiceAdapter;
+import com.mobica.repositorysdk.RepositoryServiceAdapter;
 
 import javax.inject.Inject;
 

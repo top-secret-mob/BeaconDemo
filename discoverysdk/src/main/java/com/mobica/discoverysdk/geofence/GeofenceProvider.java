@@ -14,8 +14,15 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofencingRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.mobica.discoverysdk.dagger.Graphs;
+import com.mobica.discoverysdk.location.ILocationProvider;
+import com.mobica.repositorysdk.RepositoryServiceAdapter;
+import com.mobica.repositorysdk.model.GeoFence;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -24,7 +31,7 @@ import javax.inject.Inject;
  * Provider class for geo fencing functionality
  */
 public class GeofenceProvider implements GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener, GeoFencesFetcher.GeoFencesFetcherListener {
+        GoogleApiClient.OnConnectionFailedListener {
     private static final String TAG = GeofenceProvider.class.getSimpleName();
 
     public enum State {
@@ -48,16 +55,18 @@ public class GeofenceProvider implements GoogleApiClient.ConnectionCallbacks,
     // Stores the PendingIntent used to request geo fence monitoring.
     private PendingIntent geofenceRequestIntent;
     private GoogleApiClient apiClient;
-    private GeoFencesFetcher fetcher;
     private List<Geofence> geofenceList;
     private State state = State.DISCONNECTED;
+    private ListenableFuture<List<GeoFence>> geofenceFuture;
 
     @Inject
     Context context;
     @Inject
-    GeoFencesFetcherFactory geoFencesFetcherFactory;
-    @Inject
     GoogleApiClientFactory googleApiClientFactory;
+    @Inject
+    RepositoryServiceAdapter repositoryService;
+    @Inject
+    ILocationProvider locationProvider;
 
     public GeofenceProvider(GeofenceProviderListener listener) {
         this.listener = listener;
@@ -97,8 +106,7 @@ public class GeofenceProvider implements GoogleApiClient.ConnectionCallbacks,
         listener.onGeofenceApiConnected();
 
         state = State.CONNECTED;
-        fetcher = geoFencesFetcherFactory.create(this);
-        fetcher.execute();
+        fetchGeofences();
 
         final IntentFilter filter = new IntentFilter(GeofenceTransitionsIntentService.GEOFENCE_ENTERED);
         filter.addAction(GeofenceTransitionsIntentService.GEOFENCE_EXIT);
@@ -110,7 +118,7 @@ public class GeofenceProvider implements GoogleApiClient.ConnectionCallbacks,
         Log.d(TAG, "LocationServices connection suspended");
 
         state = State.SUSPENDED;
-        fetcher.cancel(true);
+        cancelGeofencesFetching();
 
         if (geofenceRequestIntent != null && geofenceList != null) {
             LocationServices.GeofencingApi.removeGeofences(apiClient, geofenceRequestIntent);
@@ -125,27 +133,47 @@ public class GeofenceProvider implements GoogleApiClient.ConnectionCallbacks,
         listener.onGeofenceApiConnectionFailed(connectionResult.getErrorMessage());
     }
 
-    @Override
-    public void onGeoFencesFetched(List<Geofence> geofences) {
-        if (getState() != State.CONNECTED) {
-            return;
-        }
+    private void fetchGeofences() {
+        geofenceFuture = repositoryService.getGeoFences(locationProvider.getCurrentLocation());
+        Futures.addCallback(geofenceFuture, new FutureCallback<List<GeoFence>>() {
+            @Override
+            public void onSuccess(final List<GeoFence> geofences) {
+                if (getState() != State.CONNECTED) {
+                    return;
+                }
 
-        Log.d(TAG, "Retrieved " + geofences.size() + " geo fences");
+                Log.d(TAG, "Retrieved " + geofences.size() + " geo fences");
 
-        Intent intent = new Intent(context, GeofenceTransitionsIntentService.class);
-        geofenceRequestIntent = PendingIntent.getService(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+                Intent intent = new Intent(context, GeofenceTransitionsIntentService.class);
+                geofenceRequestIntent = PendingIntent.getService(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        this.geofenceList = geofences;
-        final GeofencingRequest request = new GeofencingRequest.Builder()
-                .addGeofences(geofences)
-                .build();
-        LocationServices.GeofencingApi.addGeofences(apiClient, request, geofenceRequestIntent);
+                geofenceList = new ArrayList<>();
+                for (GeoFence geoFence : geofences) {
+                    geofenceList.add(new Geofence.Builder()
+                            .setRequestId(geoFence.getId())
+                            .setCircularRegion(geoFence.getLatitude(), geoFence.getLongitude(), geoFence.getRadius())
+                            .setExpirationDuration(Geofence.NEVER_EXPIRE)
+                            .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER | Geofence.GEOFENCE_TRANSITION_EXIT)
+                            .build());
+                }
+
+                final GeofencingRequest request = new GeofencingRequest.Builder()
+                        .addGeofences(geofenceList)
+                        .build();
+                LocationServices.GeofencingApi.addGeofences(apiClient, request, geofenceRequestIntent);
+            }
+
+            @Override
+            public void onFailure(Throwable t) {
+                Log.e(TAG, "Failed to retrieve geo fences, reason:" + t.getMessage());
+            }
+        });
     }
 
-    @Override
-    public void onGeoFencesFetchingFailed(Throwable error) {
-        Log.e(TAG, "Failed to retrieve geo fences");
+    private void cancelGeofencesFetching() {
+        if (geofenceFuture != null) {
+            geofenceFuture.cancel(true);
+        }
     }
 
     private final BroadcastReceiver localReceiver = new BroadcastReceiver() {

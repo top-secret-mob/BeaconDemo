@@ -2,12 +2,11 @@ package com.mobica.discoverysdk.dagger;
 
 import android.content.Context;
 
-import com.android.volley.RequestQueue;
-import com.mobica.discoverysdk.gcm.DiscoveryRegistrationIntentService;
-import com.mobica.discoverysdk.geofence.GeoFencesFetcherFactory;
 import com.mobica.discoverysdk.geofence.GeofenceProvider;
 import com.mobica.discoverysdk.geofence.GoogleApiClientFactory;
+import com.mobica.discoverysdk.location.ILocationProvider;
 import com.mobica.discoverysdk.nfc.DiscoverActivity;
+import com.mobica.discoverysdk.wifi.ScannerClient;
 import com.mobica.discoverysdk.wifi.WifiScanner;
 
 import dagger.Module;
@@ -17,24 +16,17 @@ import dagger.Provides;
  * Dagger main module
  */
 @Module(injects = {Context.class, WifiScanner.class, GeofenceProvider.class, DiscoverActivity.class,
-        GeoFencesFetcherFactory.class, GoogleApiClientFactory.class, RequestQueue.class,
-        DiscoveryRegistrationIntentService.class})
+        ScannerClient.class, GoogleApiClientFactory.class, ILocationProvider.class, Context.class},
+        library = true, complete = false)
 public class DiscoveryModule {
-    private final Context appContext;
-    private final RequestQueue requestQueue;
+    private final ILocationProvider locationProvider;
 
-    public DiscoveryModule(Context appContext, RequestQueue queue) {
-        this.appContext = appContext;
-        this.requestQueue = queue;
+    public DiscoveryModule(ILocationProvider locationProvider) {
+        this.locationProvider = locationProvider;
     }
 
     @Provides
-    public Context provideContext() {
-        return appContext;
-    }
-
-    @Provides
-    public RequestQueue provideRequestQueue() {
-        return requestQueue;
+    public ILocationProvider provideLocationProvider() {
+        return locationProvider;
     }
 }

@@ -11,7 +11,7 @@ import android.view.MenuItem;
 
 import com.mobica.beacondemo.BeaconApplication;
 import com.mobica.beacondemo.R;
-import com.mobica.beacondemo.ble.DiscoveryManager;
+import com.mobica.beacondemo.DiscoveryManager;
 import com.mobica.beacondemo.config.ConfigStorage;
 import com.mobica.discoverysdk.DiscoveryMode;
 
