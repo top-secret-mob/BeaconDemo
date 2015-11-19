@@ -7,9 +7,8 @@ import com.mobica.beacondemo.ble.BleAdapter;
 import com.mobica.beacondemo.config.ConfigStorage;
 import com.mobica.beacondemo.dagger.BeaconModule;
 import com.mobica.beacondemo.location.LocationProvider;
-import com.mobica.beacondemo.utils.Credentials;
 import com.mobica.discoverysdk.dagger.DiscoveryModule;
-import com.mobica.repositorysdk.RepositoryServiceAdapter;
+import com.mobica.repositorysdk.RepositoryAdapter;
 import com.mobica.repositorysdk.dagger.RepositoryModule;
 
 import dagger.ObjectGraph;
@@ -28,7 +27,7 @@ public class BeaconApplication extends Application {
 
         // initialize dagger
         BeaconApplication.graph = ObjectGraph.create(new BeaconModule(this),
-                new DiscoveryModule(new LocationProvider()), new RepositoryModule(this, new Credentials()));
+                new DiscoveryModule(new LocationProvider()), new RepositoryModule());
 
         // initialize repository sdk
         com.mobica.repositorysdk.dagger.Graphs.init(graph);
@@ -39,9 +38,7 @@ public class BeaconApplication extends Application {
         ConfigStorage.setup();
         ConfigStorage.wasBleEnabled.set(BleAdapter.isBleEnabled(this));
 
-        final RepositoryServiceAdapter repositoryServiceAdapter = graph.get(RepositoryServiceAdapter.class);
-        repositoryServiceAdapter.connect(this);
-        repositoryServiceAdapter.login();
+        graph.get(RepositoryAdapter.class).login();
 
         final DiscoveryManager discoveryManager = graph.get(DiscoveryManager.class);
         discoveryManager.updateModes(ConfigStorage.bleSwitchModes.get());

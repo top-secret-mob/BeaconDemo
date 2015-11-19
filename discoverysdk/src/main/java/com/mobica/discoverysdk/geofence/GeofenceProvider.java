@@ -19,7 +19,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.mobica.discoverysdk.dagger.Graphs;
 import com.mobica.discoverysdk.location.ILocationProvider;
-import com.mobica.repositorysdk.RepositoryServiceAdapter;
+import com.mobica.repositorysdk.RepositoryAdapter;
 import com.mobica.repositorysdk.model.GeoFence;
 
 import java.util.ArrayList;
@@ -64,7 +64,7 @@ public class GeofenceProvider implements GoogleApiClient.ConnectionCallbacks,
     @Inject
     GoogleApiClientFactory googleApiClientFactory;
     @Inject
-    RepositoryServiceAdapter repositoryService;
+    RepositoryAdapter repositoryService;
     @Inject
     ILocationProvider locationProvider;
 

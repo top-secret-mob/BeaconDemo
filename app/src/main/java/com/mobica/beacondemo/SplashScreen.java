@@ -11,7 +11,8 @@ import android.widget.ProgressBar;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.mobica.repositorysdk.RepositoryServiceAdapter;
+import com.mobica.beacondemo.config.ConfigStorage;
+import com.mobica.repositorysdk.RepositoryAdapter;
 import com.mobica.repositorysdk.utils.FluentExecutors;
 
 import javax.inject.Inject;
@@ -21,7 +22,9 @@ public class SplashScreen extends AppCompatActivity {
     private ListenableFuture<Void> loginFuture;
 
     @Inject
-    RepositoryServiceAdapter repositoryService;
+    RepositoryAdapter repositoryService;
+    @Inject
+    DiscoveryManager discoveryManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,6 +55,7 @@ public class SplashScreen extends AppCompatActivity {
     private final FutureCallback<Void> loginCallback = new FutureCallback<Void>() {
         @Override
         public void onSuccess(Void result) {
+            discoveryManager.updateModes(ConfigStorage.bleSwitchModes.get());
             startActivity(new Intent(SplashScreen.this, MainActivity.class));
             finish();
         }

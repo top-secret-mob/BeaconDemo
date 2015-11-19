@@ -7,5 +7,9 @@ public interface ICredentials {
 
     String getMacAddress();
 
-    String getToken();
+    String getAuthToken();
+
+    void setAuthToken(String token);
+
+    String getGcmToken();
 }

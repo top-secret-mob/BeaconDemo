@@ -1,9 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- strings -->
-    <string name="project_id">123</string>
-    <string name="register_api">http://89.174.7.92:50650/discovery/register</string>
-    <string name="unregister_api">http://89.174.7.92:50650/discovery/unregister</string>
     <string name="wifi_ssid_pattern">nok10</string>
 
     <!-- integers -->

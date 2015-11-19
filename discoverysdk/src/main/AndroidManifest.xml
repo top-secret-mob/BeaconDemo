@@ -54,10 +54,6 @@
             android:name=".nfc.NfcDiscoverService"
             android:exported="false" >
         </service>
-        <service
-            android:name=".gcm.DiscoveryRegistrationIntentService"
-            android:exported="false" >
-        </service>
     </application>
 
 </manifest>

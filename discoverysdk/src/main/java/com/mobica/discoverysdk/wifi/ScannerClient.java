@@ -8,7 +8,8 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.mobica.discoverysdk.gcm.GcmMessageListener;
 import com.mobica.discoverysdk.gcm.GcmMessageProxy;
-import com.mobica.repositorysdk.RepositoryServiceAdapter;
+import com.mobica.repositorysdk.RepositoryAdapter;
+import com.mobica.repositorysdk.model.WsResponse;
 import com.mobica.repositorysdk.utils.FluentExecutors;
 
 import java.util.List;
@@ -22,7 +23,7 @@ import javax.inject.Inject;
 public class ScannerClient {
     private static final String TAG = ScannerClient.class.getSimpleName();
     // GCM message identifier
-    private static final String PARAM_MESSAGE_TYPE = "message_type";
+    private static final String PARAM_MESSAGE_ID = "message_id";
     // whether device is in WIFI range of a scanner device
     private static final String PARAM_IN_RANGE = "in_range";
     // whether device discovery status has changed (in_range value changed)
@@ -43,22 +44,22 @@ public class ScannerClient {
     }
 
     private final List<ScannerClientListener> detectionListeners = new CopyOnWriteArrayList<>();
-    private ListenableFuture<Void> registerFuture;
-    private ListenableFuture<Void> unregisterFuture;
+    private ListenableFuture<WsResponse> SubscribeFuture;
+    private ListenableFuture<WsResponse> unsubscribeFuture;
 
     @Inject
-    RepositoryServiceAdapter repositoryAdapter;
+    RepositoryAdapter repositoryAdapter;
     @Inject
     GcmMessageProxy proxy;
 
     public synchronized void register(final ScannerClientRegistrationListener registrationListener,
                                       final ScannerClientListener detectionListener) {
-        if (registerFuture == null) {
-            unregisterFuture = null;
-            registerFuture = repositoryAdapter.registerForDiscoveryEvents();
-            Futures.addCallback(registerFuture, new FutureCallback<Void>() {
+        if (SubscribeFuture == null) {
+            unsubscribeFuture = null;
+            SubscribeFuture = repositoryAdapter.subscribeForDiscoveryEvents();
+            Futures.addCallback(SubscribeFuture, new FutureCallback<WsResponse>() {
                 @Override
-                public void onSuccess(Void result) {
+                public void onSuccess(WsResponse result) {
                     Log.d(TAG, "Scanner client registered");
                     proxy.registerListener(gcmListener);
                 }
@@ -70,9 +71,9 @@ public class ScannerClient {
             }, FluentExecutors.mainThreadExecutor());
         }
 
-        Futures.addCallback(registerFuture, new FutureCallback<Void>() {
+        Futures.addCallback(SubscribeFuture, new FutureCallback<WsResponse>() {
             @Override
-            public void onSuccess(Void result) {
+            public void onSuccess(WsResponse result) {
                 registrationListener.onClientRegistered();
                 detectionListeners.add(detectionListener);
             }
@@ -87,12 +88,12 @@ public class ScannerClient {
     public synchronized void unregister(final ScannerClientListener detectionListener) {
         detectionListeners.remove(detectionListener);
 
-        if (detectionListeners.isEmpty() && unregisterFuture == null && registerFuture != null) {
-            registerFuture = null;
-            unregisterFuture = repositoryAdapter.registerForDiscoveryEvents();
-            Futures.addCallback(unregisterFuture, new FutureCallback<Void>() {
+        if (detectionListeners.isEmpty() && unsubscribeFuture == null && SubscribeFuture != null) {
+            SubscribeFuture = null;
+            unsubscribeFuture = repositoryAdapter.subscribeForDiscoveryEvents();
+            Futures.addCallback(unsubscribeFuture, new FutureCallback<WsResponse>() {
                 @Override
-                public void onSuccess(Void result) {
+                public void onSuccess(WsResponse result) {
                     Log.d(TAG, "Scanner client unregistered");
                     proxy.unregisterListener(gcmListener);
                 }
@@ -110,7 +111,7 @@ public class ScannerClient {
         @Override
         public boolean onMessageReceived(String from, Bundle data) {
             Log.d(TAG, "Processing gcm message from:" + from + " data:" + data);
-            final String messageType = data.getString(PARAM_MESSAGE_TYPE);
+            final String messageType = data.getString(PARAM_MESSAGE_ID);
 
             if (TYPE_DISCOVERY_STATUS.equals(messageType)) {
                 processDiscoveryStatusMessage(data);

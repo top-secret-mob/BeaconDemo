@@ -77,15 +77,25 @@
         </receiver>
 
         <service
+            android:name=".gcm.WsGcmListenerService"
+            android:exported="false" >
+            <intent-filter>
+                <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+            </intent-filter>
+        </service>
+        <service
+            android:name=".gcm.InstanceIdListenerService"
+            android:exported="false" >
+            <intent-filter>
+                <action android:name="com.google.android.gms.iid.InstanceID" />
+            </intent-filter>
+        </service>
+        <service
             android:name="com.mobica.discoverysdk.geofence.GeofenceTransitionsIntentService"
             android:exported="false" >
         </service>
         <service
             android:name="com.mobica.discoverysdk.nfc.NfcDiscoverService"
-            android:exported="false" >
-        </service>
-        <service
-            android:name="com.mobica.repositorysdk.service.RepositoryService"
             android:exported="false" >
         </service>
     </application>

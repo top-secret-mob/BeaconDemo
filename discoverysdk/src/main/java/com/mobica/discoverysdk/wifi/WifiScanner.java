@@ -20,6 +20,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Wifi scanning providing class
+ * TODO: network state monitoring to enabled when wifi is back enabled
  */
 public class WifiScanner {
     private final ScheduledExecutorService threadPool = Executors.newScheduledThreadPool(1);

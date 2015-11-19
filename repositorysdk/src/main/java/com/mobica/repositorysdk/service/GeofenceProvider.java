@@ -4,10 +4,14 @@ import android.content.Context;
 import android.location.Location;
 
 import com.android.volley.Request;
-import com.google.gson.Gson;
+import com.android.volley.RequestQueue;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.mobica.repositorysdk.ICredentials;
 import com.mobica.repositorysdk.R;
-import com.mobica.repositorysdk.model.GeoFencesRequest;
 import com.mobica.repositorysdk.model.GeoFencesResponse;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -19,17 +23,22 @@ import javax.inject.Singleton;
 public class GeofenceProvider extends AbstractProvider {
     @Inject
     Context context;
+    @Inject
+    ICredentials credentials;
+    @Inject
+    RequestQueue requestQueue;
 
-    public GeoFencesResponse getGeoFences(Location location) throws Exception {
-        final String requestBody;
+    public ListenableFuture<GeoFencesResponse> getGeoFences(Location location) {
+        final Map<String, String> reqParams = new HashMap<>();
         if (location != null) {
-            requestBody = new Gson().toJson(new GeoFencesRequest(getMacAddress(),
-                    location.getLatitude(), location.getLongitude()));
+            reqParams.put("latitude", String.valueOf(location.getLatitude()));
+            reqParams.put("longitude", String.valueOf(location.getLongitude()));
         } else {
-            requestBody = new Gson().toJson(new GeoFencesRequest(getMacAddress(), 0, 0));
+            reqParams.put("latitude", "0");
+            reqParams.put("longitude", "0");
         }
 
-        return makeRequest(Request.Method.POST, context.getString(R.string.geofence_api),
-                GeoFencesResponse.class, requestBody);
+        return makeRequest(requestQueue, Request.Method.GET, context.getString(R.string.geofence_api),
+                GeoFencesResponse.class, null, getAuthHeader(credentials.getAuthToken()), reqParams);
     }
 }

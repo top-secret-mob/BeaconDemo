@@ -9,9 +9,10 @@ public class GeoFencesResponse extends WsResponse {
     private List<GeoFence> geofences;
 
     public GeoFencesResponse() {
+        super(Status.success, null);
     }
 
-    public GeoFencesResponse(Status status, String error) {
+    public GeoFencesResponse(Status status, String error, List<GeoFence> geofences) {
         super(status, error);
         this.geofences = geofences;
     }

@@ -100,7 +100,7 @@ public class DiscoveryManager implements DiscoveryClient.DiscoveryClientListener
 
     @Override
     public void onModeEnablingFailed(DiscoveryMode mode, String error) {
-        Log.d(TAG, "Mode enabling failed: " + mode + " reason: " + error);
+        Log.e(TAG, "Mode enabling failed: " + mode + " reason: " + error);
     }
 
     private void sendEntranceNotification() {

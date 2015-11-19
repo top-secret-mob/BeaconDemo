@@ -4,6 +4,7 @@ import android.location.Location;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.mobica.repositorysdk.model.GeoFence;
+import com.mobica.repositorysdk.model.WsResponse;
 
 import java.util.List;
 
@@ -14,11 +15,11 @@ public interface IRepositoryService {
 
     ListenableFuture<Void> login();
 
-    ListenableFuture<Void> logout();
+    ListenableFuture<WsResponse> logout();
 
-    ListenableFuture<Void> registerForDiscoveryEvents();
+    ListenableFuture<WsResponse> subscribeForDiscoveryEvents();
 
-    ListenableFuture<Void> unregisterFromDiscoveryEvents();
+    ListenableFuture<WsResponse> unsubscribeFomDiscoveryEvents();
 
     ListenableFuture<List<GeoFence>> getGeoFences(Location location);
 }

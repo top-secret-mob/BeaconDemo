@@ -17,26 +17,34 @@ public class GsonRequest<T> extends JsonRequest<T> {
     private final Gson gson = new Gson();
     private final Class<T> clazz;
     private final Map<String, String> headers;
+    private final Map<String, String> params;
 
     public GsonRequest(int method, String url, Class<T> clazz, String requestBody,
                        Response.Listener<T> listener, Response.ErrorListener errorListener) {
         super(method, url, requestBody, listener, errorListener);
         this.clazz = clazz;
         this.headers = null;
+        this.params = null;
     }
 
     public GsonRequest(int method, String url, Class<T> clazz, String requestBody,
-                       Map<String, String> headers,
+                       Map<String, String> headers, Map<String, String> params,
                        Response.Listener<T> listener, Response.ErrorListener errorListener) {
         super(method, url, requestBody, listener, errorListener);
 
         this.clazz = clazz;
         this.headers = headers;
+        this.params = params;
     }
 
     @Override
     public Map<String, String> getHeaders() throws AuthFailureError {
         return headers != null ? headers : super.getHeaders();
+    }
+
+    @Override
+    protected Map<String, String> getParams() throws AuthFailureError {
+        return params;
     }
 
     @Override

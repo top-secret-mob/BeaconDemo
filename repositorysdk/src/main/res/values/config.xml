@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- strings -->
-    <string name="login_api">http://89.174.7.92:50650/account/login</string>
-    <string name="logout_api">http://89.174.7.92:50650/account/logout</string>
-    <string name="register_api">http://89.174.7.92:50650/discovery/register</string>
-    <string name="unregister_api">http://89.174.7.92:50650/discovery/unregister</string>
-    <string name="geofence_api">http://89.174.7.92:50650/geofence/list</string>
+    <string name="host">89.174.7.92</string>
+    <string name="login_api">https://89.174.7.92:50651/account/login</string>
+    <string name="logout_api">https://89.174.7.92:50651/account/logout</string>
+    <string name="register_api">https://89.174.7.92:50651/discovery/subscribe</string>
+    <string name="unregister_api">https://89.174.7.92:50651/discovery/unsubscribe</string>
+    <string name="geofence_api">https://89.174.7.92:50651/geofence/list</string>
 </resources>
