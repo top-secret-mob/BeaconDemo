@@ -15,6 +15,8 @@ public interface IRepositoryService {
 
     ListenableFuture<Void> login();
 
+    ListenableFuture<Void> forceLogin();
+
     ListenableFuture<WsResponse> logout();
 
     ListenableFuture<WsResponse> subscribeForDiscoveryEvents();

@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- strings -->
-    <string name="project_id">123</string>
+    <string name="project_id">239365355728</string>
+
+    <!-- integers -->
+    <integer name="wifi_scanning_rate">15</integer>
+    <integer name="wifi_lost_timeout">60</integer>
 </resources>

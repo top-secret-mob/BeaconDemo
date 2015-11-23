@@ -43,6 +43,11 @@ public class DiscoveryManager implements DiscoveryClient.DiscoveryClientListener
     public void updateModes(EnumSet<DiscoveryMode> activeModes) {
         Log.d(TAG, "Updating modes to: " + activeModes);
 
+        if (client != null) {
+            client.disconnect();
+            client = null;
+        }
+
         if (!activeModes.isEmpty()) {
             final DiscoveryClient.Builder builder = new DiscoveryClient.Builder(context)
                     .setDiscoveryConnectionListener(this)
@@ -68,8 +73,6 @@ public class DiscoveryManager implements DiscoveryClient.DiscoveryClientListener
 
             client = builder.build();
             client.connect();
-        } else if (client != null) {
-            client.disconnect();
         }
     }
 

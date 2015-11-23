@@ -28,6 +28,6 @@ public class InstanceIdListenerService extends InstanceIDListenerService {
         super.onTokenRefresh();
         Log.d(TAG, "Gcm token refreshed");
         TokenStore.updateToken(this);
-        repositoryServiceAdapter.login();
+        repositoryServiceAdapter.forceLogin();
     }
 }

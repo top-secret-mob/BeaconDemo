@@ -90,7 +90,7 @@ public class ScannerClient {
 
         if (detectionListeners.isEmpty() && unsubscribeFuture == null && SubscribeFuture != null) {
             SubscribeFuture = null;
-            unsubscribeFuture = repositoryAdapter.subscribeForDiscoveryEvents();
+            unsubscribeFuture = repositoryAdapter.unsubscribeFomDiscoveryEvents();
             Futures.addCallback(unsubscribeFuture, new FutureCallback<WsResponse>() {
                 @Override
                 public void onSuccess(WsResponse result) {

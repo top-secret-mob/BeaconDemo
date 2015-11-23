@@ -55,7 +55,6 @@ public class SplashScreen extends AppCompatActivity {
     private final FutureCallback<Void> loginCallback = new FutureCallback<Void>() {
         @Override
         public void onSuccess(Void result) {
-            discoveryManager.updateModes(ConfigStorage.bleSwitchModes.get());
             startActivity(new Intent(SplashScreen.this, MainActivity.class));
             finish();
         }

@@ -51,6 +51,15 @@ public class RepositoryAdapter implements IRepositoryService {
 
     @Override
     public synchronized ListenableFuture<Void> login() {
+        if (loginFuture != null) {
+            return loginFuture;
+        }
+
+        return forceLogin();
+    }
+
+    @Override
+    public ListenableFuture<Void> forceLogin() {
         loginFuture = Futures.transformAsync(registrationProvider.login(), new AsyncFunction<RegisterResponse, Void>() {
             @Override
             public ListenableFuture<Void> apply(RegisterResponse response) throws Exception {
